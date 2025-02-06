@@ -79,7 +79,7 @@ python duplicatecheck.py
 - **Dependencies**: pandas, requests, bs4, tqdm, os
 
 **How to Run**: 
-1. Change input_path (result file from concatenatedeity.py) and output_path to your desired files and file paths
+1. Change input_path (result file from concatenatedeities.py) and output_path to your desired files and file paths
 2. Run the code using the following command:
 ```
 python deity_text.py
