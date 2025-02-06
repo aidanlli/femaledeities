@@ -33,10 +33,13 @@ The file "qrySummary_eHRAF_WorldCultures_Jan2024" is manually downloaded from th
 **How to Run**: 
 
 1. Change the "csv_path" to wherever you downloaded the file qrySummary_eHRAF_WorldCultures_Jan2024.
-2. Run the code. If you would like to visually see the process, please comment out "options.add_argument('--headless')".
+2. Run the code using the following command. If you would like to visually see the process, please comment out "options.add_argument('--headless')" on line 26.
+```
+python deityscraping.py
+```
 3. Once the code finishes running, comment out options.add_argument('--headless'). Then, uncomment "#cultures = [ "O'odham","Mi'kmaq", "Chiricahua Apache"]" and comment out "cultures = df["EHRAF WORLD CULTURES NAME"] # Remove NaN values and duplicates". Then, for cultures O'odham and Mi'kmaq, you may have to help the macro navigate to the page displaying paragraphs. Alternatively, download these manually.
 4. Run the concatenatedeities.py and duplicatecheck.py, only after you do so should you navigate back here (if applicable)
-5. There are two cultures which the "download all" button does not work, even when pressed manually; this may be due to the quantity of these paragraphs. These are cultures Dogon and Ifugao. Instead, manually navigate to these pages and download these files in batches; I found that 2-3 seperate batches was sufficient.
+5. There are two cultures which the "download all" button does not work, even when pressed manually; this may be due to the quantity of these paragraphs. These are cultures Dogon and Ifugao; I've linked their pages [here](https://ehrafworldcultures.yale.edu/search/traditional/data?owcs=FA16&culture=Dogon&docs=28&sres=4365&q=cultures%3A%22Dogon%22+AND+subjects%3A%28%22spirits+and+gods%22+OR+%22gender+roles+and+issues%22+OR+%22mythology%22+OR+%22gender+status%22+OR+%22revelation+and+divination%22%29) and [here](https://ehrafworldcultures.yale.edu/search/traditional/data?owcs=OA19&culture=Ifugao&docs=22&sres=3610&q=cultures%3A%22Ifugao%22+AND+subjects%3A%28%22spirits+and+gods%22+OR+%22gender+roles+and+issues%22+OR+%22mythology%22+OR+%22gender+status%22+OR+%22revelation+and+divination%22%29), respectively. Instead, manually navigate to these pages and download these files in batches; I found that 2-3 seperate batches was sufficient.
 6. If there are any other cultures missing after running duplicatecheck.py, you may either put these missing cultures into a list and set cultures = [your list here] and run the code again, or you can simply download the files directly from the website. After downloading these extra files, place them into the folder_path and run concatenatedeities.py and duplicatecheck.py. After this, you should get the expected output.
 
 
@@ -49,7 +52,10 @@ The file "qrySummary_eHRAF_WorldCultures_Jan2024" is manually downloaded from th
 
 1. If not already in a folder, move all donwloaded files to a folder. Do not move any files not produced by the previous deityscraping.py.
 2. change the folder_path and the download_path to your liking
-3. run the code
+3. run the code using the following command:
+```
+python concatenatedeities.py
+```
 
 ### 3. `duplicatecheck.py` - **Verifying that all file were correctly downloaded**
 - **Purpose**: To verify the presence of all cultures, and to identify any missing cultures from the 
@@ -59,7 +65,10 @@ The file "qrySummary_eHRAF_WorldCultures_Jan2024" is manually downloaded from th
 **How to Run**:
 
 1. Change csv_path and concatenated_csv_path to your paths, as well as missing_cultures_path to a path of your choice.
-2. Run the code.
+2. Run the code using the following command:
+```
+python duplicatecheck.py
+```
 3. Examine the output of the code:
 - If you see '['Eastern Apache', 'Baluchi', 'Karakalpak', 'Hazara', 'Ghorbat', 'Tajiks']', you are done. All the files have been correctly concatenated. You may proceed to the next file. Eastern Apache is now coded as Chiricahua Apache. Given the subject strings, all the other cultures do not have a file relevant to the search strings.
 - If you see cultures OTHER than these, refer back to deityscraping step 5 and 6.
@@ -71,7 +80,10 @@ The file "qrySummary_eHRAF_WorldCultures_Jan2024" is manually downloaded from th
 
 **How to Run**: 
 1. Change input_path and output_path to your desired files and file paths
-2. Run the code
+2. Run the code using the following command:
+```
+python deity_text.py
+```
 3. Come back in 8 hours (sleep, do other work, etc.)
 
 Note: if you attempt to change the updating structure of the code (df.to_csv), when you run the code keep an eye on the size of the new file for several minutes. If you append incorrectly, the file size will massively increase to ~2gb in just several minutes.
