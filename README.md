@@ -6,21 +6,30 @@
 - **Version**: 1.0.0
 - **Repository**: [https://github.com/aidanlli/femaledeities](https://github.com/aidanlli/femaledeities)
 
-## Dependencies
-- `requests`
-- `beautifulsoup4`
-- `pandas`
-- `tqdm`
-- `selenium`
-- `urllib`
-- `webdriver_manager`
+## Setup & Installation
+
+### Prerequisites
+  - "requests"
+  - "bs4"
+  - "pandas"
+  - "tqdm"
+  - "selenium"
+  - "urllib"
+  - "webdriver_manager"
+  - "os"
+  - "time"
+
+Initialize a python environment and run 
+```
+pip install -r requirements.txt
+```
+
 
 # Data Scraping From eHRAF
 
 ## Overview
 
-This project consists of four Python scripts that collectively handle data scraping, processing, and output generation of every culture within the eHRAF
-World Cultures Database, which is maintained by the Human Relations Area Files (HRAF) at Yale University. While utilizing JavaScript may be faster, we used python for the ability to display the scraping process in a manner that allows the user to interact with the scraping and visually verify bugs and missed cultures. The total runtime to scrape all information from the database, including paragraph text, is around 11 hours: deityscraping.py, duplicatecheck.py, and concatenatedeities.py take roughly three hours to run, and deity_text.py takes approximately eight hours to run, but may vary depending on hardware.
+This project consists of four Python scripts that collectively handle data scraping, processing, and output generation of every culture within the eHRAF World Cultures Database, which is maintained by the Human Relations Area Files (HRAF) at Yale University. While utilizing JavaScript may be faster, we used python for the ability to display the scraping process in a manner that allows the user to interact with the scraping and visually verify bugs and missed cultures. The total runtime to scrape all information from the database, including paragraph text, is around 11 hours: deityscraping.py, duplicatecheck.py, and concatenatedeities.py take roughly three hours to run, and deity_text.py takes approximately eight hours to run, but may vary depending on hardware.
 
 The file "qrySummary_eHRAF_WorldCultures_Jan2024" is manually downloaded from the HRAF website: "Cultures in eHRAF World Cultures", found [here](https://hraf.yale.edu/resources/reference/). However, I have also added two additional cultures that have been catalouged between the latest update of that file and 2/5/2025: Tarascans and Chiriguano. If you choose to download from the website directly instead of utilizing the file in the repository, make sure to update this information.
 ## Files
@@ -88,20 +97,3 @@ python deity_text.py
 
 Note: if you attempt to change the updating structure of the code (df.to_csv), when you run the code keep an eye on the size of the new file for several minutes. If you append incorrectly, the file size will massively increase to ~2gb in just several minutes.
 
-## Setup & Installation
-
-### Prerequisites
-  - "requests"
-  - "bs4"
-  - "pandas"
-  - "tqdm"
-  - "selenium"
-  - "urllib"
-  - "webdriver_manager"
-  - "os"
-  - "time"
-
-Initialize a python environment and run 
-```
-pip install -r requirements.txt
-```
