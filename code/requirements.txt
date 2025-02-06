@@ -1,0 +1,9 @@
+pandas
+requests
+bs4
+tqdm
+os
+time
+urllib
+selenium
+webdriver_manager
