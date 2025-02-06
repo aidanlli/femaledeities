@@ -1,20 +1,20 @@
----
-title: "Data Scraping For Female Deities"
-description: "Scraping text and sources from the eHRAF database."
-author: "Aidan Li"
-version: "1.0.0"
-repository: "https://github.com/aidanlli/femaledeities"
-dependencies:
-  - "requests"
-  - "beautifulsoup4"
-  - "pandas"
-  - "tqdm"
-  - "selenium"
-  - "urllib"
-  - "webdriver_manager"
-  - "requests"
-toc: true
----
+# Data Scraping For Female Deities
+
+## Overview
+- **Description**: Scraping text and sources from the eHRAF database.
+- **Author**: Aidan Li
+- **Version**: 1.0.0
+- **Repository**: [https://github.com/aidanlli/femaledeities](https://github.com/aidanlli/femaledeities)
+
+## Dependencies
+- `requests`
+- `beautifulsoup4`
+- `pandas`
+- `tqdm`
+- `selenium`
+- `urllib`
+- `webdriver_manager`
+
 # Data Scraping From eHRAF
 
 ## Overview
