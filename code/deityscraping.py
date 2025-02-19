@@ -9,6 +9,8 @@ from urllib.parse import quote
 import time
 import pandas as pd
 import os
+import math
+
 
 def search_ehraf(culture, subjects):
     subjects_query = ' OR '.join([f'"{subject}"' for subject in subjects])
@@ -41,7 +43,7 @@ def search_ehraf(culture, subjects):
                     EC.element_to_be_clickable((By.XPATH, "//div[contains(@class, 'trad-overview__result')]/h4/button"))
                 )
                 region_button.click()
-                time.sleep(2)  # Give time for the page to update
+                time.sleep(3)  # Give time for the page to update
                 break
             except Exception as e:
                 print(f"Retry {attempt+1}: {e}")
@@ -55,10 +57,11 @@ def search_ehraf(culture, subjects):
             try:
                 print(f"Attempt {attempt+1}: Clicking culture link...")
                 culture_link = wait.until(
-                    EC.element_to_be_clickable((By.XPATH, f"//a[contains(text(), '{culture}')]"))
+                    EC.element_to_be_clickable((By.XPATH, f"//a[contains(translate(., \"’‘\", \"''\"), \"{culture}\")]"))
                 )
+
                 culture_link.click()
-                time.sleep(2)
+                time.sleep(3)
                 break
             except Exception as e:
                 print(f"Retry {attempt+1}: {e}")
@@ -116,11 +119,25 @@ def search_ehraf(culture, subjects):
 #search_ehraf("Rwala Bedouin", ["spirits and gods", "traditional history", "mythology"])
 csv_path = r"C:/Users/aidan/Downloads/qrySummary_eHRAF_WorldCultures_Jan2024.csv"
 df = pd.read_csv(csv_path)
-cultures = df["EHRAF WORLD CULTURES NAME"] # Remove NaN values and duplicates
+cultures = df["EHRAF WORLD CULTURES NAME"].tolist() + ["Chiricahua Apache"]
 #uncomment the following cultures = line after the macro, comment out the previous cultures = section. 
 #You may have to manually help the macro navigate to the download page.
-#cultures = [ "O'odham","Mi'kmaq", "Chiricahua Apache"]
-subjects = ["spirits and gods", "Gender Roles and Issues", "mythology", "Gender Status", "Revelation and Divination"]
+#cultures = ['Dogon', 'Turkmens', 'Huron/Wendat', 'Kachin', 'Pamir Peoples', 'Zulu', 'Bhil', 'Quiché Maya', 'Italian Americans', 'Navajo', 'Eastern Apache', 'Zia Pueblo', 'Ifugao', 'Hazara', 'Hopi', 'Dominicans', 'Siwai']
+subjects = [
+    "cult of the dead",
+    "general character of religion",
+    "cosmology",
+    "mythology",
+    "animism",
+    "eschatology",
+    "spirits and gods",
+    "sacred objects and places",
+    "theological systems",
+    "revelation and divination",
+    "luck and chances"
+]
 for culture in cultures:
     print(f"🔍 Searching for culture: {culture}")
     search_ehraf(culture, subjects)
+
+size_issue_list = ["Dogon", "Navajo", "Ifugao", "Hopi", "Zulu"]
