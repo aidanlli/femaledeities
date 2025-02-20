@@ -44,19 +44,30 @@ The file "qrySummary_eHRAF_WorldCultures_Jan2024" is manually downloaded from th
 - **Purpose**: Takes every downloaded file from deityscraping.py and concatenates them into one master dataframe.
 - **Key Functions**: count_and_concatenate: Define the expected columns in each df, count number of files, concatenate all dataframes, remove any possible duplicate entries based on paragraph UUID.
 - **Dependencies**: os, pandas.
+- **Output**: One large .csv file (~66mb) containing all files from `cultural_sources_scraping.py` output, as well as manually incorporated .csvs.
 
 ### 3. `cultural_sources_checks.py` - **Verifying that all culture files were correctly downloaded**
 - **Purpose**: To verify the presence of all cultures, and to identify any missing cultures from the 
 - **Key Functions**: Find cultures in the eHRAF list of cultures.
 - **Dependencies**: pandas.
-
+- **Output**: A list of cultures present in the culture master list but not present in the large .csv file produced from `cultural_sources_concatenate.py`.
 ### 4. `paragraph_text_append.py` - **Taking our master dataframe and scraping the text information**
 - **Purpose**: Scrape paragraph data for all UUIDs and append them to a new file.
 - **Key Functions**: scrape_text: takes the link from column "Permalink" in the master dataframe and extracts paragraph information from each link.
 - **Dependencies**: pandas, requests, bs4, tqdm, os
+- **Output**: An appended version of the large .csv file produced in `cultural_sources_scraping.py` with two extra rows: "Raw Text" and "Text". The new .csv is around 470mb.
 
 ### 5. `verify_dataframe_accuracy.py` - **Verifying cohesion and accuracy of the newly scraped dataframe with the original source dataframe**
-- **Purpose**: To verify that all uuids in the paragraph source dataframe are in the updated dataframe containing paragraph text
+- **Purpose**: To verify that all uuids in the paragraph source dataframe are in the updated dataframe containing paragraph text.
+- **Key Functions**: Check if all uuids in .csv produced by `paragraph_text_append.py` are in `cultural_sources_concatenate.py`, remove rows in that don't have a matching uuid. Counts blank rows in Raw Text and Text, counts number of rows in Raw Text and Text with "No text found".
+- **Dependencies**: pandas, re
+- **Output**: An appended version of the large .csv file produced in `cultural_sources_scraping.py` with two extra rows: "Raw Text" and "Text". The new .csv is around 470mb.
+
+### 6. `dataframe_high_level_metrics` - **Creating plots and tables summarizing dataframe**
+- **Purpose**: To summarize high-level metrics and interesting preliminary statistics of the dataframe
+- **Key Functions**: Create 8 tables and 8 plots showing distribution of key aspects of the dataframe, such as Region, Culture, Substinence, and Keyword distribution.
+- **Dependencies**: pandas, re, matplotlib
+- **Output**: 8 tables and 8 plots - 7 bar charts, 1 histogram.
 
 **How to Run**: 
 
