@@ -7,3 +7,4 @@ time
 urllib
 selenium
 webdriver_manager
+matplotlib

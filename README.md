@@ -19,6 +19,7 @@
   - "webdriver_manager"
   - "os"
   - "time"
+  - "matplotlib"
 
 Initialize a python environment and run 
 ```
@@ -88,10 +89,15 @@ python cultural_sources_concatenate.py
 python cultural_sources_checks.py
 ```
 If you see the following output:
+
 Missing culture: Dominicans
+
 Missing culture: Eastern Apache
+
 Missing culture: Turkmens
+
 Missing culture: Hazara
+
 Missing culture: Pamir Peoples
 
 Ignore steps 7-8 and immediately move to step 9. If you see additional missing cultures, create a list with the additional missed cultures. For example, if we are missing the Yoruba, Iroquois, and Ainu, the list should be as follows:
@@ -107,10 +113,15 @@ python cultural_sources_concatenate.py
 python cultural_sources_checks.py
 ```
 You should now see the following output:
+
 Missing culture: Dominicans
+
 Missing culture: Eastern Apache
+
 Missing culture: Turkmens
+
 Missing culture: Hazara
+
 Missing culture: Pamir Peoples
 
 If not, repeat steps 7-8 with the updated list until the output matches above.
@@ -134,20 +145,30 @@ python dataframe_high_level_metrics.py
 Check the graphs and tables to make sure they seem reasonable. The tables for Region, Subregion, Subsistence, Culture, and DocType should have a row titled "Total ___". These should all have the same value. The tables for male, female, and dual keywords also have a "Total __", but these will not be equivalent. The keywords are listed below:
 
 Male Keywords:
+
 he, him, his, father, king, lord, prince, son, husband, brother, patriarch, fatherhood, brotherhood
+
 Female Keywords:
+
 she, her, mother, queen, lady, goddess, daughter, wife, sister, matriarch, motherhood
+
 Dual Keywords:
+
 androgynous, dual-gendered, god/goddess
 
 
 ## Final Output
 Your final output should consist of the following:
+
 1 ~66mb .csv file with columns "uuid", "Primary_Author", "Title", "Published", "Page", "DocType", "Culture", "Region", "Subregion", "Subsistence", "OCM", "IDs", "Permalink".
+
 1 ~470mb .csv file with columns "uuid", "Primary_Author", "Title", "Published", "Page", "DocType", "Culture", "Region", "Subregion", "Subsistence", "OCM", "IDs", "Permalink", "Raw Text", "Text"
+
 8 tables: Culture, DocType, dual_keywords, female_keywords, male_keywords, Region, Subregion, and Subsistence
 - These tables should list the exact counts of each type of Culture, DocType, Region, Subregion, and Subsistence method, as well as the frequency of male keywords, female keywords, and dual keywords in "Text".
+
 7 bar charts: DocType, dual_keywords, female_keywords, male_keywords, Region, Subregion, and Subsistence
 - These charts visually display the relative counts and frequency of each type of DocType, Region, Subregion, and Subsistence and Male/Female/Dual keywords.
+
 1 histogram: Culture 
 - This histogram displays the distribution of the quantity of source paragraphs for each source.
