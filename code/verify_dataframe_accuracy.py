@@ -15,7 +15,7 @@ updated_uuids = set(updated_df['uuid'])
 # Check if all uuids in concatenated are in updated
 missing_uuids = concatenated_uuids - updated_uuids
 if not missing_uuids:
-    print("All uuids from concatenated are present in updated.")
+    print("All uuids from paragraph source document are present in document with appended paragraphs.")
 else:
     print(f"Missing uuids in updated output: {len(missing_uuids)}")
     print(missing_uuids)

@@ -64,7 +64,7 @@ The file "qrySummary_eHRAF_WorldCultures_Jan2024" is manually downloaded from th
 - **Purpose**: To verify that all uuids in the paragraph source dataframe are in the updated dataframe containing paragraph text.
 - **Key Functions**: Check if all uuids in .csv produced by `paragraph_text_append.py` are in `cultural_sources_concatenate.py`, remove rows in that don't have a matching uuid. Counts blank rows in Raw Text and Text, counts number of rows in Raw Text and Text with "No text found".
 - **Dependencies**: pandas, re
-- **Output**: An appended version of the large .csv file produced in `cultural_sources_scraping.py` with two extra rows: "Raw Text" and "Text". The new .csv is around 470mb.
+- **Output**: 8 print statements describing dataframe row removal and possible missing data in "Raw Text" and "Text".
 
 ### 6. `dataframe_high_level_metrics` - **Creating plots and tables summarizing dataframe**
 - **Purpose**: To summarize high-level metrics and interesting preliminary statistics of the dataframe
