@@ -3,6 +3,7 @@
 ## Overview
 - **Description**: Scraping text and sources from the eHRAF database.
 - **Author**: Aidan Li
+- **Date**: 2/20/2025
 - **Version**: 1.1.0
 - **Repository**: [https://github.com/aidanlli/femaledeities](https://github.com/aidanlli/femaledeities)
 
@@ -29,16 +30,17 @@ pip install -r requirements.txt
 
 ## Overview
 
-This project consists six Python scripts that collectively handle data scraping, processing, cleaning, output generation, and high-level metrics of every culture within the eHRAF World Cultures Database, which is maintained by the Human Relations Area Files (HRAF) at Yale University. While utilizing JavaScript may be faster, we used Python for the ability to display the scraping process in a manner that allows the user to interact with the scraping and visually verify bugs and missed cultures. The total runtime to scrape all information from the database is around 11 hours: cultural_sources_scraping.py, takes roughly three hours to run and paragraph_text_append.py takes approximately eight hours to run, but may vary depending on hardware. The other files have a comparatively trivial runtime. 
+This project consists six Python scripts that collectively handle data scraping, processing, cleaning, output generation, and high-level metric generation of every culture within the eHRAF World Cultures Database, which is maintained by the Human Relations Area Files (HRAF) at Yale University. While utilizing JavaScript may be faster, we used Python for the ability to display the scraping process in a manner that allows the user to interact with the scraping and visually verify bugs and missed cultures. The total runtime to scrape all information from the database is around 11 hours: cultural_sources_scraping.py, takes roughly three hours to run and paragraph_text_append.py takes approximately eight hours to run, but may vary depending on hardware. The other files have a comparatively trivial runtime. 
 
 The file "qrySummary_eHRAF_WorldCultures_Jan2024" is manually downloaded from the HRAF website: "Cultures in eHRAF World Cultures", found [here](https://hraf.yale.edu/resources/reference/). However, I have also added two additional cultures that have been catalouged between the latest update of that file and 2/5/2025: Tarascans and Chiriguano. If you choose to download from the website directly instead of utilizing the file in the repository, make sure to update this information.
 ## Files
 
 ### 1. `cultural_sources_scraping.py` - **Obtaining paragraph source information from eHRAF**
 - **Purpose**: To scrape all relevant paragraphs given culture and subject search strings
-- **Key Functions**: search_ehraf: Initiates a program which automatically opens a Google Chrome tab, directs the search to the exact culture page based upon the subject filters, and selects and downloads all paragraph sources into a .csv file.
+- **Key Functions**: search_ehraf: Initiates a program which automatically opens a Google Chrome tab, directs the search to the exact culture page based upon the subject filters (), and selects and downloads all paragraph sources into a .csv file.
 - **Dependencies**: pandas, selenium, time, urllib, os
 - **Output**: 355 .csv files beginning with "ehrafSearch"
+- **Subject Filters**: cult of the dead, general character of religion, cosmology, mythology, animism, eschatology, spirits and gods, sacred objects and places, theological systems, revelation and divination, luck and chances
 
 ### 2. `cultural_sources_concatenate.py` - **Merging all individual dataframes together**
 - **Purpose**: Takes every downloaded file from deityscraping.py and concatenates them into one master dataframe.
@@ -69,49 +71,83 @@ The file "qrySummary_eHRAF_WorldCultures_Jan2024" is manually downloaded from th
 - **Dependencies**: pandas, re, matplotlib
 - **Output**: 8 tables and 8 plots - 7 bar charts, 1 histogram.
 
-**How to Run**: 
-
-1. Change the "csv_path" to wherever you downloaded the file qrySummary_eHRAF_WorldCultures_Jan2024.
-2. Run the code using the following command. If you would like to visually see the process, please comment out "options.add_argument('--headless')" on line 26.
+## **How to Run**: 
+1. Change the "csv_path" in `cultural_sources_scraping` to wherever you downloaded the file qrySummary_eHRAF_WorldCultures_Jan2024. 
+2. Run the following command. If you would like to visually see the process, please comment out "options.add_argument('--headless')" on line 26. in `cultural_sources_scraping.py`.
 ```
-python deityscraping.py
+python cultural_sources_scraping.py
 ```
-3. Once the code finishes running, comment out options.add_argument('--headless'). Then, uncomment "#cultures = [ "O'odham","Mi'kmaq", "Chiricahua Apache"]" and comment out "cultures = df["EHRAF WORLD CULTURES NAME"] # Remove NaN values and duplicates". Then, for cultures O'odham and Mi'kmaq, you may have to help the macro navigate to the page displaying paragraphs. Alternatively, download these manually.
-4. Run the concatenatedeities.py and duplicatecheck.py, only after you do so should you navigate back here (if applicable)
-5. There are two cultures which the "download all" button does not work, even when pressed manually; this may be due to the quantity of these paragraphs. These are cultures Dogon and Ifugao; I've linked their pages [here](https://ehrafworldcultures.yale.edu/search/traditional/data?owcs=FA16&culture=Dogon&docs=28&sres=4365&q=cultures%3A%22Dogon%22+AND+subjects%3A%28%22spirits+and+gods%22+OR+%22gender+roles+and+issues%22+OR+%22mythology%22+OR+%22gender+status%22+OR+%22revelation+and+divination%22%29) and [here](https://ehrafworldcultures.yale.edu/search/traditional/data?owcs=OA19&culture=Ifugao&docs=22&sres=3610&q=cultures%3A%22Ifugao%22+AND+subjects%3A%28%22spirits+and+gods%22+OR+%22gender+roles+and+issues%22+OR+%22mythology%22+OR+%22gender+status%22+OR+%22revelation+and+divination%22%29), respectively. Instead, manually navigate to these pages and download these files in batches; I found that 2-3 seperate batches was sufficient.
-6. If there are any other cultures missing after running duplicatecheck.py, you may either put these missing cultures into a list and set cultures = [your list here] and run the code again, or you can simply download the files directly from the website. After downloading these extra files, place them into the folder_path and run concatenatedeities.py and duplicatecheck.py. After this, you should get the expected output.
-
-
-
-**How to Run**: 
-
-1. If not already in a folder, move all donwloaded files to a folder. Do not move any files not produced by the previous deityscraping.py.
-2. change the folder_path and the download_path to your liking
-3. run the code using the following command:
+3. Move all downloaded files, as well as the files under the "files" folder on Github to a folder of your choice. Open `cultural_sources_concatenate.py` and change the download_path and folder_path to your desired paths. The folder_path should correspond to the folder your placed all the downloaded files into, while the download_path is up to you.
+4. Run the following code
 ```
-python concatenatedeities.py
+python cultural_sources_concatenate.py
 ```
-
-
-**How to Run**:
-
-1. Change csv_path and concatenated_csv_path to your paths, as well as missing_cultures_path to a path of your choice.
-2. Run the code using the following command:
+5. Change the "csv_path" in `cultural_sources_checks.py` to the path from step 1. Change `concatenated_csv_path` to wherever the output of `cultural_sources_concatenate.py` is located.
+6. Run the following code
 ```
-python duplicatecheck.py
+python cultural_sources_checks.py
 ```
-3. Examine the output of the code:
-- If you see '['Eastern Apache', 'Baluchi', 'Karakalpak', 'Hazara', 'Ghorbat', 'Tajiks']', you are done. All the files have been correctly concatenated. You may proceed to the next file. Eastern Apache is now coded as Chiricahua Apache. Given the subject strings, all the other cultures do not have a file relevant to the search strings.
-- If you see cultures OTHER than these, refer back to deityscraping step 5 and 6.
+If you see the following output:
+Missing culture: Dominicans
+Missing culture: Eastern Apache
+Missing culture: Turkmens
+Missing culture: Hazara
+Missing culture: Pamir Peoples
 
+Ignore steps 7-8 and immediately move to step 9. If you see additional missing cultures, create a list with the additional missed cultures. For example, if we are missing the Yoruba, Iroquois, and Ainu, the list should be as follows:
+['Yoruba', 'Iroquois', 'Ainu']
 
-**How to Run**: 
-1. Change input_path (result file from concatenatedeities.py) and output_path to your desired files and file paths
-2. Run the code using the following command:
+7. Take the list created and navigate back to `cultural_sources_scraping`. Uncomment line 125 and paste your list, replacing the dummy list present. 
+8. Run the following code:
 ```
-python deity_text.py
+python cultural_sources_scraping.py
+
+python cultural_sources_concatenate.py
+
+python cultural_sources_checks.py
 ```
-3. Come back in 8 hours (sleep, do other work, etc.)
+You should now see the following output:
+Missing culture: Dominicans
+Missing culture: Eastern Apache
+Missing culture: Turkmens
+Missing culture: Hazara
+Missing culture: Pamir Peoples
 
-Note: if you attempt to change the updating structure of the code (df.to_csv), when you run the code keep an eye on the size of the new file for several minutes. If you append incorrectly, the file size will massively increase to ~2gb in just several minutes.
+If not, repeat steps 7-8 with the updated list until the output matches above.
 
+9. Open `paragraph_text_append` and change the "input_path" to the output of step 2 and the "output_path" to the output from step 6. Then, run the following code:
+```
+python paragraph_text_append.py
+```
+This should take about 8 hours.
+
+10. Open `verify_dataframe_accuracy` and change the "input_path" and "output_path" to the paths from step 9. Then, run the following code:
+```
+python verify_dataframe_accuracy.py
+```
+Make sure that the column 'Raw Text' has no blank rows. If you do not see "All uuids from concatenated are present in updated" and instead see "Missing uuids in updated output:", this is a serious issue. If you cannot diagnose this problem, send me a message. Make sure that the number of rows with "No text found" is low; as of 2/20/2025, there should be 13 instances of "No text found" . If the number of rows is significantly higher than this, there may have been an issue with the paragraph appending from step 9. To ensure this is an error in the code, open the .csv output and verify whether or not the "No text found" rows truly have no text found when you view the Permalink. 
+
+11. Open `dataframe_high_level_metrics` and change the "output_path" to the path from steps 9 and 10. Change the "export_path" to an export path of your choice that can store 16 .png files. Then, run the following code:
+```
+python dataframe_high_level_metrics.py
+```
+Check the graphs and tables to make sure they seem reasonable. The tables for Region, Subregion, Subsistence, Culture, and DocType should have a row titled "Total ___". These should all have the same value. The tables for male, female, and dual keywords also have a "Total __", but these will not be equivalent. The keywords are listed below:
+
+Male Keywords:
+he, him, his, father, king, lord, prince, son, husband, brother, patriarch, fatherhood, brotherhood
+Female Keywords:
+she, her, mother, queen, lady, goddess, daughter, wife, sister, matriarch, motherhood
+Dual Keywords:
+androgynous, dual-gendered, god/goddess
+
+
+## Final Output
+Your final output should consist of the following:
+1 ~66mb .csv file with columns "uuid", "Primary_Author", "Title", "Published", "Page", "DocType", "Culture", "Region", "Subregion", "Subsistence", "OCM", "IDs", "Permalink".
+1 ~470mb .csv file with columns "uuid", "Primary_Author", "Title", "Published", "Page", "DocType", "Culture", "Region", "Subregion", "Subsistence", "OCM", "IDs", "Permalink", "Raw Text", "Text"
+8 tables: Culture, DocType, dual_keywords, female_keywords, male_keywords, Region, Subregion, and Subsistence
+- These tables should list the exact counts of each type of Culture, DocType, Region, Subregion, and Subsistence method, as well as the frequency of male keywords, female keywords, and dual keywords in "Text".
+7 bar charts: DocType, dual_keywords, female_keywords, male_keywords, Region, Subregion, and Subsistence
+- These charts visually display the relative counts and frequency of each type of DocType, Region, Subregion, and Subsistence and Male/Female/Dual keywords.
+1 histogram: Culture 
+- This histogram displays the distribution of the quantity of source paragraphs for each source.

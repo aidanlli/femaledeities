@@ -122,7 +122,8 @@ df = pd.read_csv(csv_path)
 cultures = df["EHRAF WORLD CULTURES NAME"].tolist() + ["Chiricahua Apache"]
 #uncomment the following cultures = line after the macro, comment out the previous cultures = section. 
 #You may have to manually help the macro navigate to the download page.
-#cultures = ['Dogon', 'Turkmens', 'Huron/Wendat', 'Kachin', 'Pamir Peoples', 'Zulu', 'Bhil', 'Quiché Maya', 'Italian Americans', 'Navajo', 'Eastern Apache', 'Zia Pueblo', 'Ifugao', 'Hazara', 'Hopi', 'Dominicans', 'Siwai']
+#cultures = ['Yoruba', 'Iroquois', 'Ainu']
+
 subjects = [
     "cult of the dead",
     "general character of religion",
