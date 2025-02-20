@@ -3,7 +3,7 @@
 ## Overview
 - **Description**: Scraping text and sources from the eHRAF database.
 - **Author**: Aidan Li
-- **Version**: 1.0.0
+- **Version**: 1.1.0
 - **Repository**: [https://github.com/aidanlli/femaledeities](https://github.com/aidanlli/femaledeities)
 
 ## Setup & Installation
@@ -29,15 +29,34 @@ pip install -r requirements.txt
 
 ## Overview
 
-This project consists of four Python scripts that collectively handle data scraping, processing, and output generation of every culture within the eHRAF World Cultures Database, which is maintained by the Human Relations Area Files (HRAF) at Yale University. While utilizing JavaScript may be faster, we used python for the ability to display the scraping process in a manner that allows the user to interact with the scraping and visually verify bugs and missed cultures. The total runtime to scrape all information from the database, including paragraph text, is around 11 hours: deityscraping.py, duplicatecheck.py, and concatenatedeities.py take roughly three hours to run, and deity_text.py takes approximately eight hours to run, but may vary depending on hardware.
+This project consists six Python scripts that collectively handle data scraping, processing, cleaning, output generation, and high-level metrics of every culture within the eHRAF World Cultures Database, which is maintained by the Human Relations Area Files (HRAF) at Yale University. While utilizing JavaScript may be faster, we used Python for the ability to display the scraping process in a manner that allows the user to interact with the scraping and visually verify bugs and missed cultures. The total runtime to scrape all information from the database is around 11 hours: cultural_sources_scraping.py, takes roughly three hours to run and paragraph_text_append.py takes approximately eight hours to run, but may vary depending on hardware. The other files have a comparatively trivial runtime. 
 
 The file "qrySummary_eHRAF_WorldCultures_Jan2024" is manually downloaded from the HRAF website: "Cultures in eHRAF World Cultures", found [here](https://hraf.yale.edu/resources/reference/). However, I have also added two additional cultures that have been catalouged between the latest update of that file and 2/5/2025: Tarascans and Chiriguano. If you choose to download from the website directly instead of utilizing the file in the repository, make sure to update this information.
 ## Files
 
-### 1. `deityscraping.py` - **Obtaining paragraph information from eHRAF**
+### 1. `cultural_sources_scraping.py` - **Obtaining paragraph source information from eHRAF**
 - **Purpose**: To scrape all relevant paragraphs given culture and subject search strings
 - **Key Functions**: search_ehraf: Initiates a program which automatically opens a Google Chrome tab, directs the search to the exact culture page based upon the subject filters, and selects and downloads all paragraph sources into a .csv file.
 - **Dependencies**: pandas, selenium, time, urllib, os
+- **Output**: 355 .csv files beginning with "ehrafSearch"
+
+### 2. `cultural_sources_concatenate.py` - **Merging all individual dataframes together**
+- **Purpose**: Takes every downloaded file from deityscraping.py and concatenates them into one master dataframe.
+- **Key Functions**: count_and_concatenate: Define the expected columns in each df, count number of files, concatenate all dataframes, remove any possible duplicate entries based on paragraph UUID.
+- **Dependencies**: os, pandas.
+
+### 3. `cultural_sources_checks.py` - **Verifying that all culture files were correctly downloaded**
+- **Purpose**: To verify the presence of all cultures, and to identify any missing cultures from the 
+- **Key Functions**: Find cultures in the eHRAF list of cultures.
+- **Dependencies**: pandas.
+
+### 4. `paragraph_text_append.py` - **Taking our master dataframe and scraping the text information**
+- **Purpose**: Scrape paragraph data for all UUIDs and append them to a new file.
+- **Key Functions**: scrape_text: takes the link from column "Permalink" in the master dataframe and extracts paragraph information from each link.
+- **Dependencies**: pandas, requests, bs4, tqdm, os
+
+### 5. `verify_dataframe_accuracy.py` - **Verifying cohesion and accuracy of the newly scraped dataframe with the original source dataframe**
+- **Purpose**: To verify that all uuids in the paragraph source dataframe are in the updated dataframe containing paragraph text
 
 **How to Run**: 
 
@@ -52,10 +71,6 @@ python deityscraping.py
 6. If there are any other cultures missing after running duplicatecheck.py, you may either put these missing cultures into a list and set cultures = [your list here] and run the code again, or you can simply download the files directly from the website. After downloading these extra files, place them into the folder_path and run concatenatedeities.py and duplicatecheck.py. After this, you should get the expected output.
 
 
-### 2. `concatenatedeities.py` - **Merging all individual dataframes together**
-- **Purpose**: Takes every downloaded file from deityscraping.py and concatenates them into one master dataframe.
-- **Key Functions**: count_and_concatenate: Define the expected columns in each df, count number of files, concatenate all dataframes, remove any duplicate entries.
-- **Dependencies**: os, pandas.
 
 **How to Run**: 
 
@@ -66,10 +81,6 @@ python deityscraping.py
 python concatenatedeities.py
 ```
 
-### 3. `duplicatecheck.py` - **Verifying that all file were correctly downloaded**
-- **Purpose**: To verify the presence of all cultures, and to identify any missing cultures from the 
-- **Key Functions**: Find cultures in the eHRAF list of cultures.
-- **Dependencies**: pandas.
 
 **How to Run**:
 
@@ -82,10 +93,6 @@ python duplicatecheck.py
 - If you see '['Eastern Apache', 'Baluchi', 'Karakalpak', 'Hazara', 'Ghorbat', 'Tajiks']', you are done. All the files have been correctly concatenated. You may proceed to the next file. Eastern Apache is now coded as Chiricahua Apache. Given the subject strings, all the other cultures do not have a file relevant to the search strings.
 - If you see cultures OTHER than these, refer back to deityscraping step 5 and 6.
 
-### 4. `deity_text.py` - **Taking our master dataframe and scraping the text information**
-- **Purpose**: Scrape paragraph data for all UUIDs and append them to a new file.
-- **Key Functions**: scrape_text: takes the link from column "Permalink" in the master dataframe and extracts paragraph information from each link.
-- **Dependencies**: pandas, requests, bs4, tqdm, os
 
 **How to Run**: 
 1. Change input_path (result file from concatenatedeities.py) and output_path to your desired files and file paths
