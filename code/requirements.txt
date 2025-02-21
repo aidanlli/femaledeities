@@ -8,3 +8,5 @@ urllib
 selenium
 webdriver_manager
 matplotlib
+numpy
+seaborn

@@ -69,7 +69,7 @@ The file "qrySummary_eHRAF_WorldCultures_Jan2024" is manually downloaded from th
 ### 6. `dataframe_high_level_metrics` - **Creating plots and tables summarizing dataframe**
 - **Purpose**: To summarize high-level metrics and interesting preliminary statistics of the dataframe
 - **Key Functions**: Create 8 tables and 8 plots showing distribution of key aspects of the dataframe, such as Region, Culture, Substinence, and Keyword distribution.
-- **Dependencies**: pandas, re, matplotlib
+- **Dependencies**: pandas, re, matplotlib, numpy, seaborn
 - **Output**: 8 tables and 8 plots - 7 bar charts, 1 histogram.
 
 ## **How to Run**: 

@@ -1,8 +1,10 @@
 import pandas as pd
 import re
 import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
 
-output_path = "C:/Users/aidan/Downloads/updated_output_12_subjects.csv"
+output_path = "C:/Users/aidan/Downloads/updated_output_11s.csv"
 export_dir = "C:/Users/aidan/OneDrive/Documents/GitHub/femaledeities/plots_and_stats/"  # Ensure trailing slash
 
 df = pd.read_csv(output_path)
@@ -81,19 +83,77 @@ for column in columns_to_count:
     count_df.columns = [column, "Count"]
     total_row = pd.DataFrame({column: [f"Total {column}"], "Count": [count_df["Count"].sum()]})
     count_df = pd.concat([count_df, total_row], ignore_index=True)
-        
-    save_df_as_image(count_df, f"{column}_counts.png", f"{column} Value Counts")
-    if column != "Culture":
+    if column == "Culture":
+        count_df.to_csv(f"{export_dir}{column}_counts.csv", index=False)
+    else:
+        save_df_as_image(count_df, f"{column}_counts.png", f"{column} Value Counts")
         save_bar_chart(count_df.iloc[:-1], f"{column}_counts_bar.png", f"{column} Frequency", column, "Count")  # Exclude total row
+
         
-# Special case: Histogram for Culture
+# Original Culture histogram
 plt.figure(figsize=(10, 5))
 df["Culture"].value_counts().plot(kind='hist', bins=50, color='lightcoral', edgecolor='black')
 plt.xlabel("Culture")
-plt.ylabel("Frequency")
+plt.ylabel("Number of Paragraphs")
 plt.title("Culture Count Distribution")
 plt.tight_layout()
 plt.savefig(f"{export_dir}Culture_histogram.png", dpi=300)
 plt.close()
+
+max_bin = 3000  # Upper x-limit
+num_bins = 50  # Number of bins
+bin_edges = np.linspace(0, max_bin, num_bins + 1)  # Creates evenly spaced bin edges
+
+# Additional Culture histogram with x-axis limited to 0-3000
+plt.figure(figsize=(10, 5))
+df["Culture"].value_counts().plot(kind='hist', bins=bin_edges, color='lightcoral', edgecolor='black')
+plt.xlabel("Culture")
+plt.ylabel("Number of Paragraphs")
+plt.title("Culture Count Distribution")
+plt.xlim(0, 3000)  # Set x-axis limits
+plt.tight_layout()
+plt.savefig(f"{export_dir}Culture_histogram_limited.png", dpi=300)
+plt.close()
+
+# Count the number of unique cultures per region
+unique_cultures_per_region = df.groupby("Region")["Culture"].nunique().reset_index()
+unique_cultures_per_region.columns = ["Region", "Unique Culture Count"]
+
+# Save as a table image
+save_df_as_image(unique_cultures_per_region, "unique_cultures_per_region.png", "Unique Cultures per Region")
+
+# Optional: Save as a bar chart
+plt.figure(figsize=(12, 6))
+plt.bar(unique_cultures_per_region["Region"], unique_cultures_per_region["Unique Culture Count"], color="mediumseagreen")
+plt.xlabel("Region")
+plt.ylabel("Number of Unique Cultures")
+plt.title("Unique Cultures per Region")
+plt.xticks(rotation=45, ha="right")
+plt.tight_layout()
+plt.savefig(f"{export_dir}unique_cultures_per_region_bar.png", dpi=300)
+plt.close()
+
+# Count DocType occurrences per Region and save as CSV
+doc_type_by_region = df.groupby(["Region", "DocType"]).size().reset_index(name="Count")
+doc_type_by_region.to_csv(f"{export_dir}doc_type_by_region.csv", index=False)
+
+
+
+# Pivot the data for better visualization
+doc_type_pivot = doc_type_by_region.pivot(index="Region", columns="DocType", values="Count").fillna(0)
+
+# Plot the stacked bar chart
+plt.figure(figsize=(12, 6))
+doc_type_pivot.plot(kind="bar", stacked=True, colormap="tab10", figsize=(12, 6))
+
+plt.xlabel("Region")
+plt.ylabel("Count")
+plt.title("DocType Counts by Region")
+plt.xticks(rotation=45, ha="right")
+plt.legend(title="DocType", bbox_to_anchor=(1.05, 1), loc="upper left")  # Move legend outside the plot
+plt.tight_layout()
+plt.savefig(f"{export_dir}doc_type_by_region_bar.png", dpi=300)
+plt.close()
+
 
 print("Tables and charts saved as PNG images in:", export_dir)
