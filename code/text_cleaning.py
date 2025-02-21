@@ -68,7 +68,7 @@ fig2, ax2 = plt.subplots(figsize=(10, 6))
 ax2.bar(topic_counts["Topic"], topic_counts["Count"], color='skyblue')
 ax2.set_xlabel("Topic")
 ax2.set_ylabel("Count")
-ax2.set_title("Counts of Topics after 'Load in Context'")
+ax2.set_title("Counts of Subjects")
 plt.xticks(rotation=45, ha="right")
 plt.tight_layout()
 
