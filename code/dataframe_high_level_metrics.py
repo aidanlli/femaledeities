@@ -3,6 +3,7 @@ import re
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+import math
 
 output_path = "C:/Users/aidan/Downloads/updated_output_11s.csv"
 export_dir = "C:/Users/aidan/OneDrive/Documents/GitHub/femaledeities/plots_and_stats/"  # Ensure trailing slash
@@ -101,7 +102,7 @@ plt.savefig(f"{export_dir}Culture_histogram.png", dpi=300)
 plt.close()
 
 max_bin = 3000  # Upper x-limit
-num_bins = 50  # Number of bins
+num_bins = 60  # Number of bins
 bin_edges = np.linspace(0, max_bin, num_bins + 1)  # Creates evenly spaced bin edges
 
 # Additional Culture histogram with x-axis limited to 0-3000
@@ -154,6 +155,35 @@ plt.legend(title="DocType", bbox_to_anchor=(1.05, 1), loc="upper left")  # Move 
 plt.tight_layout()
 plt.savefig(f"{export_dir}doc_type_by_region_bar.png", dpi=300)
 plt.close()
+
+
+# Get unique regions
+regions = doc_type_by_region["Region"].unique()
+num_regions = len(regions)
+
+# Set up grid layout (e.g., 3x3, 4x4 depending on region count)
+cols = 4  # Adjust for aesthetics
+rows = math.ceil(num_regions / cols)
+
+fig, axes = plt.subplots(rows, cols, figsize=(cols * 9, rows * 9))
+axes = axes.flatten()  # Flatten to 1D array for easy iteration
+
+# Generate pie charts for each region
+for i, region in enumerate(regions):
+    subset = doc_type_by_region[doc_type_by_region["Region"] == region]
+    
+    # Only plot if there's more than one category
+    if len(subset) > 1:
+        axes[i].pie(subset["Count"], labels=subset["DocType"], autopct="%1.1f%%", colors=plt.cm.Paired.colors)
+        axes[i].set_title(region)
+    else:
+        axes[i].axis("off")  # Hide empty subplots
+
+# Adjust layout and save
+plt.tight_layout()
+plt.savefig(f"{export_dir}doc_type_pie_all_regions.png", dpi=300)
+plt.close()
+
 
 
 print("Tables and charts saved as PNG images in:", export_dir)
