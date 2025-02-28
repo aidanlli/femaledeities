@@ -9,6 +9,7 @@ output_bar_chart_path = "C:/Users/aidan/OneDrive/Documents/GitHub/femaledeities/
 
 # Load CSV
 df = pd.read_csv(input_csv)
+df["Text"] = df["Text"].apply(lambda x: x.split("Load in Context", 1)[-1] if isinstance(x, str) and "Load in Context" in x else x)
 
 # Define topics with keys as the topic numbers (as strings)
 topics = {
