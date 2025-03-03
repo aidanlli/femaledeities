@@ -82,7 +82,7 @@ The file "qrySummary_eHRAF_WorldCultures_Jan2024" is manually downloaded from th
 - **Purpose**: Changing all encoding to UTF-8 for standardization and readability for analysis
 - **Key Functions**: Changes latin1 encoding to utf-8 encoding
 - **Dependencies**: pandas
-- **Output**: New .csv file with UTF-8 encoding
+- **Output**: New .csv file with UTF-8 encoding, as well as a print of the output of one cell. There should be a phrase "kikinè" if successful.
 
 
 ## **How to Run**: 
@@ -177,6 +177,7 @@ python text_cleaning_subject_expansion.py
 ```
 python fix_encoding_errors.py
 ```
+Verify the example output is correctly encoded, with the phrase "thekikinècan" present.
 
 ## Final Output
 Your final output should consist of the following:
