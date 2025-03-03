@@ -4,7 +4,7 @@
 - **Description**: Scraping text and sources from the eHRAF database.
 - **Author**: Aidan Li
 - **Date**: 2/20/2025
-- **Version**: 1.2.0
+- **Version**: 1.2.1
 - **Repository**: [https://github.com/aidanlli/femaledeities](https://github.com/aidanlli/femaledeities)
 
 ## Setup & Installation
@@ -77,6 +77,13 @@ The file "qrySummary_eHRAF_WorldCultures_Jan2024" is manually downloaded from th
 - **Key Functions**: Remove extraneous text from "Text" column, primarily the phrase "Load in Context". Create 11 new columns that show whether or not a source has a certain tag, and creates one bar chart and one table displaying the distribution.
 - **Dependencies**: pandas, matplotlib
 - **Output**: Cleaned "Text" column, 11 new columns, 1 table, 1 bar chart
+
+### 8. `fix_encoding_errors` - **fixing possible encoding errors and formatting to UTF-8**
+- **Purpose**: Changing all encoding to UTF-8 for standardization and readability for analysis
+- **Key Functions**: Changes latin1 encoding to utf-8 encoding
+- **Dependencies**: pandas
+- **Output**: New .csv file with UTF-8 encoding
+
 
 ## **How to Run**: 
 1. Change the "csv_path" in `cultural_sources_scraping` to wherever you downloaded the file qrySummary_eHRAF_WorldCultures_Jan2024. 
@@ -166,13 +173,17 @@ androgynous, dual-gendered, god/goddess
 ```
 python text_cleaning_subject_expansion.py
 ```
+13. Open `fix_encoding_errors.py`and change the file paths as desired. Then, run the following code:
+```
+python fix_encoding_errors.py
+```
 
 ## Final Output
 Your final output should consist of the following:
 
 1 ~66mb .csv file with columns "uuid", "Primary_Author", "Title", "Published", "Page", "DocType", "Culture", "Region", "Subregion", "Subsistence", "OCM", "IDs", "Permalink".
 
-1 ~470mb .csv file with columns "uuid", "Primary_Author", "Title", "Published", "Page", "DocType", "Culture", "Region", "Subregion", "Subsistence", "OCM", "IDs", "Permalink", "Raw Text", "Text"
+1 ~470mb .csv file in UTF-8 format with columns "uuid", "Primary_Author", "Title", "Published", "Page", "DocType", "Culture", "Region", "Subregion", "Subsistence", "OCM", "IDs", "Permalink", "Raw Text", "Text", as well as columns starting with 769, 771, 772, 773, 774, 775, 776, 777, 778, 779, 787.
 
 8 tables: Culture, DocType, dual_keywords, female_keywords, male_keywords, Region, Subregion, Subject type, and Subsistence
 - These tables should list the exact counts of each type of Culture, DocType, Region, Subregion, Subject type, and Subsistence method, as well as the frequency of male keywords, female keywords, and dual keywords in "Text".
