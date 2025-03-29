@@ -5,12 +5,15 @@ from tqdm import tqdm
 import os
 
 # File paths
-input_path = "C:/Users/aidan/Downloads/concatenated_output_12s.csv"
-output_path = "C:/Users/aidan/Downloads/updated_output_12_subjects.csv"
+#input_path = "C:/Users/aidan/Downloads/modified_output.csv"
+input_path = "C:/Users/aidan/Downloads/concatenated_output_11s.csv"
+#input_path = "C:/Users/aidan/Downloads/testencoding.csv"
+#output_path = "C:/Users/aidan/Downloads/testoutput.csv"
+output_path = "C:/Users/aidan/Downloads/scraped_output_final.csv"
 save_interval = 1000  # Save every 1000 rows
 
 # Load input CSV
-df = pd.read_csv(input_path)
+df = pd.read_csv(input_path, encoding="utf-8-sig", dtype=str)
 
 # Try loading existing output CSV to resume progress
 if os.path.exists(output_path):
@@ -81,5 +84,12 @@ for i, row in tqdm(df.iterrows(), total=len(df)):
         df.to_csv(output_path, index=False)
 
 # Final save
-df.to_csv(output_path, index=False)
+df.to_csv(output_path, index=False, encoding="utf-8-sig")
 print(f"Updated CSV saved to {output_path}")
+import chardet
+
+with open(output_path, "rb") as f:
+    raw_data = f.read(10000)  # Read a portion of the file
+    result = chardet.detect(raw_data)  # Detect encoding
+    print(result)
+
