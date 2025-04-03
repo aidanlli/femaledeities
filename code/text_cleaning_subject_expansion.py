@@ -2,14 +2,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # File paths
-input_csv = "C:/Users/aidan/Downloads/processed_output_11s.csv"
-output_csv = "C:/Users/aidan/Downloads/processed_output_11s.csv"
+input_csv = "C:/Users/aidan/Downloads/processed_output_11s_v2.csv"
+output_csv = "C:/Users/aidan/Downloads/complete_deity_text_dataframe.csv"
 output_image_path = "C:/Users/aidan/OneDrive/Documents/GitHub/femaledeities/plots_and_stats/topic_counts.png"
 output_bar_chart_path = "C:/Users/aidan/OneDrive/Documents/GitHub/femaledeities/plots_and_stats/topic_counts_bar_chart.png"
 
 # Load CSV
-df = pd.read_csv(input_csv)
-df["Text"] = df["Text"].apply(lambda x: x.split("Load in Context", 1)[-1] if isinstance(x, str) and "Load in Context" in x else x)
+df = pd.read_csv(input_csv, encoding="utf-8-sig")
+df["Text"] = df["Text"].apply(lambda x: x.split("Load in Context", 1)[0] if isinstance(x, str) else x)
 
 # Define topics with keys as the topic numbers (as strings)
 topics = {
