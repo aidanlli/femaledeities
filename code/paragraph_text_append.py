@@ -6,10 +6,10 @@ import os
 
 # File paths
 #input_path = "C:/Users/aidan/Downloads/modified_output.csv"
-input_path = "C:/Users/aidan/Downloads/concatenated_output_11s.csv"
-#input_path = "C:/Users/aidan/Downloads/testencoding.csv"
-#output_path = "C:/Users/aidan/Downloads/testoutput.csv"
-output_path = "C:/Users/aidan/Downloads/scraped_output_final.csv"
+#input_path = "C:/Users/aidan/Downloads/concatenated_output_11s.csv"
+input_path = "C:/Users/aidan/Downloads/testencoding.csv"
+output_path = "C:/Users/aidan/Downloads/testoutput.csv"
+#output_path = "C:/Users/aidan/Downloads/scraped_output_final.csv"
 save_interval = 1000  # Save every 1000 rows
 
 # Load input CSV
@@ -81,7 +81,7 @@ for i, row in tqdm(df.iterrows(), total=len(df)):
 
     # Save progress every N rows
     if i % save_interval == 0:
-        df.to_csv(output_path, index=False)
+        df.to_csv(output_path, index=False, encoding="utf-8-sig")
 
 # Final save
 df.to_csv(output_path, index=False, encoding="utf-8-sig")

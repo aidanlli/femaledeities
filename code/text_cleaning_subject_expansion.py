@@ -44,7 +44,7 @@ for key, col_name in topics.items():
     print(f"Processed topic column: {col_name}")
 
 # Optionally, save the modified CSV
-df.to_csv(output_csv, index=False)
+df.to_csv(output_csv, index=False, encoding="utf-8-sig")
 print(f"Modified CSV saved to {output_csv}")
 
 # Now count the occurrences (i.e. sum the 1's) in each topic column

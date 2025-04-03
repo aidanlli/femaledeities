@@ -21,7 +21,7 @@ df["Raw Text"] = df["Raw Text"].apply(fix_encoding)
 df["Text"] = df["Text"].apply(fix_encoding)
 
 # Save the fixed CSV
-df.to_csv(output_path_2, index=False, encoding="utf-8")
+df.to_csv(output_path_2, index=False, encoding="utf-8-sig")
 print(f"Encoding fixed and saved to {output_path_2}")
 
 
