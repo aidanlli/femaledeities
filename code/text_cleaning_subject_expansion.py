@@ -9,7 +9,9 @@ output_bar_chart_path = "C:/Users/aidan/OneDrive/Documents/GitHub/femaledeities/
 
 # Load CSV
 df = pd.read_csv(input_csv, encoding="utf-8-sig")
-df["Text"] = df["Text"].apply(lambda x: x.split("Load in Context", 1)[0] if isinstance(x, str) else x)
+df["Text"] = df["Text"].apply(lambda x: x.split("Load in context", 1)[0] if isinstance(x, str) else x)
+df["Text"] = df["Text"].str.replace("Load in Context", "", regex=False)
+df["Text"] = df["Text"].str.replace(r"insert_drive_file\d+", "", regex=True)
 
 # Define topics with keys as the topic numbers (as strings)
 topics = {
