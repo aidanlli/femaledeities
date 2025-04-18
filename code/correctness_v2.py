@@ -118,13 +118,14 @@ def evaluate_row(uuid, truth_row, final_row):
 
     elif all(d is None for d in truth_deities):
         unmatched = [d for d in final_deities if d]
+        score = [0 for _ in unmatched]
         return {
             "uuid": uuid,
             "truth_deities": truth_row.get('Deities', ''),
             "final_deities": final_row.get('deities', ''),
             "matched_deities": str({"missing": (", ".join(unmatched), 0)}),
-            "score": [0],
-            "gender_score": [0]
+            "score": score,
+            "gender_score": [0] * len(score)
         }
 
     elif any(d is not None for d in truth_deities) and all(d is None for d in final_deities):
@@ -141,6 +142,7 @@ def evaluate_row(uuid, truth_row, final_row):
     matched_deities = match_deities_with_aliases(deity_aliases, final_deities)
     score = []
     gender_score = []
+    used_final_deities = set()
 
     for i, deity in enumerate(truth_deities):
         if deity is None:
@@ -151,6 +153,9 @@ def evaluate_row(uuid, truth_row, final_row):
 
         found = match_score >= 50
         score.append(1 if found else 0)
+
+        if found:
+            used_final_deities.add(matched_deity)
 
         if found and i < len(truth_genders):
             truth_gender = truth_genders[i]
@@ -163,6 +168,11 @@ def evaluate_row(uuid, truth_row, final_row):
         else:
             gender_score.append(0)
 
+    # Identify false positives — unmatched predicted deities
+    unmatched_predictions = [d for d in final_deities if d not in used_final_deities]
+    score += [0 for _ in unmatched_predictions]  # Truth = 0, Predicted = 1
+    gender_score += [0 for _ in unmatched_predictions]  # No gender match
+
     return {
         "uuid": uuid,
         "truth_deities": truth_row.get('Deities', ''),
@@ -174,6 +184,7 @@ def evaluate_row(uuid, truth_row, final_row):
         "score": score,
         "gender_score": gender_score
     }
+
 
 # Run evaluation
 results = []
