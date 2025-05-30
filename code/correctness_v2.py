@@ -3,8 +3,10 @@ from fuzzywuzzy import process, fuzz
 from sklearn.metrics import accuracy_score
 import ast
 import re
+import matplotlib.pyplot as plt
+
 # File paths
-truth_path = r"C:\Users\aidan\Downloads\filtered_250_sampled_rows_v2.csv"
+truth_path = r"C:\Users\aidan\Downloads\filtered_250_sampled_rows_v3.csv"
 final_path = r"C:\Users\aidan\Downloads\3.final_full_cleaned_v2.csv"
 
 # Load datasets
@@ -20,20 +22,45 @@ def normalize_name(name):
 # Normalize gender column in final_df
 final_df['gender'] = final_df['gender'].str.strip().str.lower().replace({'male & female': 'general'})
 
-# Parse helper functions
+def save_df_as_png(df, filename, dpi=200, fontsize=10, col_width=2.5, row_height=0.6):
+    ncols = len(df.columns)
+    nrows = len(df)
+
+    fig_width = ncols * col_width
+    fig_height = nrows * row_height
+
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height))
+    ax.axis('off')
+
+    table = ax.table(
+        cellText=df.values,
+        colLabels=df.columns,
+        cellLoc='center',
+        loc='center',
+    )
+
+    table.auto_set_font_size(False)
+    table.set_fontsize(fontsize)
+    table.scale(1.2, 1.2)
+
+    plt.tight_layout()
+    plt.savefig(filename, dpi=dpi, bbox_inches='tight')
+    plt.close()
+
 def parse_comma_column(column):
     if isinstance(column, str):
-        # Heuristic: looks like a list if it starts with [ and ends with ]
-        if column.strip().startswith("[") and column.strip().endswith("]"):
+        stripped = column.strip()
+        # Heuristic: looks like a list
+        if stripped.startswith("[") and stripped.endswith("]"):
             try:
-                evaluated = ast.literal_eval(column)
+                evaluated = ast.literal_eval(stripped)
                 if isinstance(evaluated, list):
-                    return [normalize_name(item) for item in evaluated]
+                    return [normalize_name(item) for item in evaluated if normalize_name(item)]
             except (ValueError, SyntaxError):
                 pass  # Fall through to comma split
 
-        # Fallback: treat as normal text, split by commas
-        return [normalize_name(part) for part in column.split(',')]
+        # Fallback: split by comma, strip and normalize each part, and filter out blanks
+        return [normalize_name(part) for part in column.split(',') if normalize_name(part)]
     return []
 
 def parse_linked_column(column):
@@ -234,6 +261,8 @@ def evaluate_row(uuid, truth_row, final_row):
     score += [0 for _ in unmatched_predictions]  # Truth = 0, Predicted = 1
     gender_score += [0 for _ in unmatched_predictions]  # No gender match
 
+    filtered_gender_score = [gs for ds, gs in zip(score, gender_score) if ds == 1]
+
     return {
         "uuid": uuid,
         "truth_deities": truth_row.get('Deities', ''),
@@ -244,8 +273,9 @@ def evaluate_row(uuid, truth_row, final_row):
         "other_names_final": final_row.get('other names', ''),
         "matched_deities": str(matched_deities),
         "score": score,
-        "gender_score": gender_score
+        "gender_score": filtered_gender_score
     }
+
 
 
 # Run evaluation
@@ -260,12 +290,62 @@ for _, truth_row in truth_df.iterrows():
         continue
     result = evaluate_row(uuid, truth_row, final_row.iloc[0])
     results.append(result)
+from collections import defaultdict
+
+# Initialize counts
+gender_match_stats = defaultdict(lambda: {"matched": 0, "unmatched": 0})
+
+for row in results:
+    truth_genders = parse_comma_column(row.get("truth_genders", ''))
+    deity_scores = row.get("score", [])
+
+    for gender, match in zip(truth_genders, deity_scores):
+        gender_key = gender.strip().lower() if gender else "NA"
+        if match == 1:
+            gender_match_stats[gender_key]["matched"] += 1
+        else:
+            gender_match_stats[gender_key]["unmatched"] += 1
+
+# Gender match breakdown
+gender_match_stats = defaultdict(lambda: {"matched": 0, "unmatched": 0})
+
+for row in results:
+    truth_genders = parse_comma_column(row.get("truth_genders", ''))
+    deity_scores = row.get("score", [])
+
+    for gender, match in zip(truth_genders, deity_scores):
+        gender_key = gender.strip().lower() if gender else "NA"
+        if match == 1:
+            gender_match_stats[gender_key]["matched"] += 1
+        else:
+            gender_match_stats[gender_key]["unmatched"] += 1
+
+# Convert to pandas DataFrame
+gender_stats_df = pd.DataFrame([
+    {
+        "Gender": gender,
+        "Matched": counts["matched"],
+        "Unmatched": counts["unmatched"],
+        "Total": counts["matched"] + counts["unmatched"],
+        "% Matched": round(100 * counts["matched"] / (counts["matched"] + counts["unmatched"]), 2)
+        if (counts["matched"] + counts["unmatched"]) > 0 else 0.0
+    }
+    for gender, counts in gender_match_stats.items()
+])
+
+# Optional: sort by total descending
+gender_stats_df = gender_stats_df.sort_values(by="Total", ascending=False).reset_index(drop=True)
+
+# Display the table
+print(gender_stats_df)
+save_df_as_png(gender_stats_df, r"C:\Users\aidan\Downloads\gender_eval_summary.png")
 
 # Convert results
 results_df = pd.DataFrame(results)
 
 TP, FP, FN = 0, 0, 0
 gTP, gFP, gFN = 0, 0, 0
+matched_missing = 0
 
 for row in results:
     # Safely parse matched_deities if read from string
@@ -283,13 +363,14 @@ for row in results:
         else:
             match, score = match_info  # fallback for older format
 
-        if score >= 50:
+        if match == "missing" and str(row["truth_deities"]).strip().lower() == "missing":
+            matched_missing += 1  # new counter
+        elif score >= 50:
             TP += 1
             used_final_deities.add(match)
         else:
-            if str(row["truth_deities"]).strip().lower() == "missing":
-                continue  # Skip FN if truth_deities is 'missing'
-            FN += 1
+            if str(row["truth_deities"]).strip().lower() != "missing":
+                FN += 1
 
     final_deities = parse_comma_column(row["final_deities"])
     unmatched_predictions = [d for d in final_deities if d not in used_final_deities]
@@ -328,6 +409,7 @@ print("Gender Matching:")
 print(f"  TP: {gTP}, FP: {gFP}, FN: {gFN}")
 print(f"  Precision: {g_precision:.2f}, Recall: {g_recall:.2f}, F1-Score: {g_f1:.2f}, Accuracy: {g_accuracy:.2f}")
 
+print(f"  Matched Missing: {matched_missing}")
 # Collect and save false positives and false negatives
 false_positives = []
 false_negatives = []
@@ -376,11 +458,12 @@ for row in results:
 fp_df = pd.DataFrame(false_positives)
 fn_df = pd.DataFrame(false_negatives)
 
-#fp_df.to_csv(r"C:\Users\aidan\Downloads\deity_false_positives_v2.csv", index=False, encoding="utf-8-sig")
-#fn_df.to_csv(r"C:\Users\aidan\Downloads\deity_false_negatives_v2.csv", index=False, encoding="utf-8-sig")
+fp_df.to_csv(r"C:\Users\aidan\Downloads\deity_false_positives_v3.csv", index=False, encoding="utf-8-sig")
+fn_df.to_csv(r"C:\Users\aidan\Downloads\deity_false_negatives_v3.csv", index=False, encoding="utf-8-sig")
 
 # Save
-#results_df.to_csv(r"C:\Users\aidan\Downloads\deity_matching_results_full_v2_prompt_test.csv", index=False, encoding="utf-8-sig")
+results_df = results_df.merge(truth_df[['uuid', 'ambiguous']], on='uuid', how='left')
+results_df.to_csv(r"C:\Users\aidan\Downloads\deity_matching_results_full_v3_test.csv", index=False, encoding="utf-8-sig")
 
 import pandas as pd
 import ast
@@ -410,7 +493,7 @@ def evaluate_deities(truth_df, final_df):
         total_gpt_deities += sum(1 for d in final_deities if d)
 
     TP, FP, FN = 0, 0, 0
-
+    matched_missing = 0
     for row in results:
         matched_deities = ast.literal_eval(row["matched_deities"]) if isinstance(row["matched_deities"], str) else row["matched_deities"]
         used_final_deities = set()
@@ -422,7 +505,9 @@ def evaluate_deities(truth_df, final_df):
             else:
                 match, score = match_info
 
-            if score >= 50:
+            if match == "missing" and str(row["truth_deities"]).strip().lower() == "missing":
+                matched_missing += 1  # new counter
+            elif score >= 50:
                 TP += 1
                 used_final_deities.add(match)
             else:
@@ -442,6 +527,7 @@ def evaluate_deities(truth_df, final_df):
         "TP": TP,
         "FP": FP,
         "FN": FN,
+        "Matched Missing": matched_missing,
         "Precision": round(precision, 2),
         "Recall": round(recall, 2),
         "F1": round(f1, 2),
@@ -475,35 +561,9 @@ for name, t_df, f_df in combinations:
 
 # Create and display the summary table
 summary_df = pd.DataFrame(results_summary)
-summary_df = summary_df[["Comparison", "TP", "FP", "FN", "Precision", "Recall", "F1", "Accuracy", "Truth_Deities", "GPT_Deities"]]
+summary_df = summary_df[["Comparison", "TP", "FP", "FN", "Matched Missing", "Precision", "Recall", "F1", "Accuracy", "Truth_Deities", "GPT_Deities"]]
 print(summary_df)
-
-import matplotlib.pyplot as plt
-
-def save_df_as_png(df, filename, dpi=200, fontsize=10, col_width=2.5, row_height=0.6):
-    ncols = len(df.columns)
-    nrows = len(df)
-
-    fig_width = ncols * col_width
-    fig_height = nrows * row_height
-
-    fig, ax = plt.subplots(figsize=(fig_width, fig_height))
-    ax.axis('off')
-
-    table = ax.table(
-        cellText=df.values,
-        colLabels=df.columns,
-        cellLoc='center',
-        loc='center',
-    )
-
-    table.auto_set_font_size(False)
-    table.set_fontsize(fontsize)
-    table.scale(1.2, 1.2)
-
-    plt.tight_layout()
-    plt.savefig(filename, dpi=dpi, bbox_inches='tight')
-    plt.close()
 
 # Save with improved layout
 save_df_as_png(summary_df, r"C:\Users\aidan\Downloads\deity_eval_summary.png")
+
