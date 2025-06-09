@@ -1,8 +1,8 @@
 import pandas as pd
 import ast
 
-input_path = "C:/Users/aidan/Downloads/3.final_full_v2.csv"
-output_path = "C:/Users/aidan/Downloads/3.final_full_cleaned_v2.csv"
+input_path = "C:/Users/aidan/Downloads/3.final_full_v3_out_info.csv"
+output_path = "C:/Users/aidan/Downloads/3.final_full_cleaned_v3_out_info.csv"
 
 df = pd.read_csv(input_path, encoding="utf-8-sig")
 

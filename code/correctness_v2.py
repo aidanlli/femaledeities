@@ -6,8 +6,8 @@ import re
 import matplotlib.pyplot as plt
 
 # File paths
-truth_path = r"C:\Users\aidan\Downloads\filtered_250_sampled_rows_v3.csv"
-final_path = r"C:\Users\aidan\Downloads\3.final_full_cleaned_v2.csv"
+truth_path = r"C:\Users\aidan\Downloads\filtered_250_sampled_rows_v4.csv"
+final_path = r"C:\Users\aidan\Downloads\3.final_full_cleaned_v3_no_cat.csv"
 
 # Load datasets
 truth_df = pd.read_csv(truth_path, encoding="utf-8-sig")
@@ -22,12 +22,12 @@ def normalize_name(name):
 # Normalize gender column in final_df
 final_df['gender'] = final_df['gender'].str.strip().str.lower().replace({'male & female': 'general'})
 
-def save_df_as_png(df, filename, dpi=200, fontsize=10, col_width=2.5, row_height=0.6):
-    ncols = len(df.columns)
+def save_df_as_png(df, filename, dpi=200, fontsize=10, row_height=0.6):
     nrows = len(df)
 
-    fig_width = ncols * col_width
-    fig_height = nrows * row_height
+    # Rough estimate for initial figure width, will be corrected by auto_set_column_width
+    fig_height = nrows * row_height + 1.5
+    fig_width = 12  # Start with a moderate width
 
     fig, ax = plt.subplots(figsize=(fig_width, fig_height))
     ax.axis('off')
@@ -36,14 +36,20 @@ def save_df_as_png(df, filename, dpi=200, fontsize=10, col_width=2.5, row_height
         cellText=df.values,
         colLabels=df.columns,
         cellLoc='center',
-        loc='center',
+        loc='center'
     )
 
     table.auto_set_font_size(False)
     table.set_fontsize(fontsize)
-    table.scale(1.2, 1.2)
 
-    plt.tight_layout()
+    # Automatically adjust column widths based on content
+    try:
+        table.auto_set_column_width(col=list(range(len(df.columns))))
+    except AttributeError:
+        print("auto_set_column_width requires matplotlib >= 3.6")
+
+    table.scale(1.0, 1.2)
+    plt.tight_layout(pad=1.0)
     plt.savefig(filename, dpi=dpi, bbox_inches='tight')
     plt.close()
 
@@ -136,10 +142,32 @@ def build_alias_map(truth_df):
                     if alias:
                         alias_map[alias] = deity
     return alias_map
-def clean_final_deities_into_aliases(final_df, alias_map):
-    alias_keys = list(alias_map.keys())
-
+def clean_final_deities_into_aliases(final_df, truth_df):
     for idx, row in final_df.iterrows():
+        # Get corresponding truth row (assumes same index/order)
+        truth_row = truth_df.iloc[idx]
+
+        # Build per-row alias map
+        alias_map = {}
+        alias_keys = []
+
+        base_deities = parse_comma_column(truth_row.get("Deities", ""))
+        other_names = parse_linked_column(truth_row.get("Other_names", ""))
+
+        for i, deity in enumerate(base_deities):
+            if not deity:
+                continue
+
+            alias_map[deity] = deity
+            alias_keys.append(deity)
+
+            if i < len(other_names):
+                for alias in parse_comma_column(other_names[i]):
+                    if alias:
+                        alias_map[alias] = deity
+                        alias_keys.append(alias)
+
+        # Parse predicted deities for this row
         raw_deities = parse_comma_column(row.get('deities', ''))
         cleaned_deities = []
         other_names_per_deity = {}
@@ -152,11 +180,9 @@ def clean_final_deities_into_aliases(final_df, alias_map):
             canonical = alias_map.get(match)
 
             if score >= 90 and canonical:
-                # Always use canonical version in deities
                 if canonical not in cleaned_deities:
                     cleaned_deities.append(canonical)
 
-                # Add alias to 'other names' if it's not already canonical
                 if canonical != deity:
                     if canonical not in other_names_per_deity:
                         other_names_per_deity[canonical] = []
@@ -164,10 +190,8 @@ def clean_final_deities_into_aliases(final_df, alias_map):
             else:
                 cleaned_deities.append(deity)
 
-        # Store the cleaned deities
         final_df.at[idx, 'deities'] = ", ".join(cleaned_deities)
 
-        # Align aliases per deity
         ordered_aliases = []
         for deity in cleaned_deities:
             aliases = other_names_per_deity.get(deity, [])
@@ -280,8 +304,8 @@ def evaluate_row(uuid, truth_row, final_row):
 
 # Run evaluation
 results = []
-alias_map = build_alias_map(truth_df)
-final_df = clean_final_deities_into_aliases(final_df, alias_map)
+#alias_map = build_alias_map(truth_df)
+#final_df = clean_final_deities_into_aliases(final_df, truth_df)
 
 for _, truth_row in truth_df.iterrows():
     uuid = truth_row['uuid']
@@ -332,6 +356,7 @@ gender_stats_df = pd.DataFrame([
     }
     for gender, counts in gender_match_stats.items()
 ])
+print(gender_stats_df)
 
 # Optional: sort by total descending
 gender_stats_df = gender_stats_df.sort_values(by="Total", ascending=False).reset_index(drop=True)
@@ -463,14 +488,14 @@ fn_df.to_csv(r"C:\Users\aidan\Downloads\deity_false_negatives_v3.csv", index=Fal
 
 # Save
 results_df = results_df.merge(truth_df[['uuid', 'ambiguous']], on='uuid', how='left')
-results_df.to_csv(r"C:\Users\aidan\Downloads\deity_matching_results_full_v3_test.csv", index=False, encoding="utf-8-sig")
+results_df.to_csv(r"C:\Users\aidan\Downloads\deity_matching_results_full_v4_no_cat.csv", index=False, encoding="utf-8-sig")
 
 import pandas as pd
 import ast
 
 def evaluate_deities(truth_df, final_df):
-    alias_map = build_alias_map(truth_df)
-    final_df = clean_final_deities_into_aliases(final_df, alias_map)
+    #alias_map = build_alias_map(truth_df)
+    #final_df = clean_final_deities_into_aliases(final_df, truth_df)
 
     results = []
 
@@ -490,7 +515,8 @@ def evaluate_deities(truth_df, final_df):
         final_deities = parse_comma_column(final_row.iloc[0].get('deities', ''))
 
         total_truth_deities += sum(1 for d in truth_deities if d)
-        total_gpt_deities += sum(1 for d in final_deities if d)
+        normalized_deities = set(normalize_name(d) for d in final_deities if d)
+        total_gpt_deities += len(normalized_deities)
 
     TP, FP, FN = 0, 0, 0
     matched_missing = 0
@@ -540,8 +566,14 @@ def evaluate_deities(truth_df, final_df):
 truth = pd.read_csv(r"C:\Users\aidan\Downloads\filtered_250_sampled_rows.csv")
 truth_v2 = pd.read_csv(r"C:\Users\aidan\Downloads\filtered_250_sampled_rows_v2.csv")
 truth_v3 = pd.read_csv(r"C:\Users\aidan\Downloads\filtered_250_sampled_rows_v3.csv")
+truth_v4 = pd.read_csv(r"C:\Users\aidan\Downloads\filtered_250_sampled_rows_v4.csv")
 final = pd.read_csv(r"C:\Users\aidan\Downloads\3.final_full_cleaned.csv")
 final_v2 = pd.read_csv(r"C:\Users\aidan\Downloads\3.final_full_cleaned_v2.csv")
+final_v3 = pd.read_csv(r"C:\Users\aidan\Downloads\3.final_full_cleaned_v3.csv")
+final_v3_out_info = pd.read_csv(r"C:\Users\aidan\Downloads\3.final_full_cleaned_v3_out_info.csv")
+final_v3_no_cat = pd.read_csv(r"C:\Users\aidan\Downloads\3.final_full_cleaned_v3_no_cat.csv")
+
+
 
 # Prepare comparison matrix
 combinations = [
@@ -549,7 +581,10 @@ combinations = [
     ("Truth 1 vs Prompt 2", truth, final_v2),
     ("Truth 2 vs Prompt 1", truth_v2, final),
     ("Truth 2 vs Prompt 2", truth_v2, final_v2),
-    ("Truth 3 vs Prompt 2", truth_v3, final_v2)
+    ("Truth 3 vs Prompt 2", truth_v3, final_v2), 
+    ("Truth 4 vs Prompt 3", truth_v4, final_v3), 
+    ("Truth 4 vs Prompt 3 with outside info column", truth_v4, final_v3_out_info), 
+    ("Truth 4 vs Prompt 3 without categories", truth_v4, final_v3_no_cat), 
 ]
 
 results_summary = []
@@ -567,3 +602,73 @@ print(summary_df)
 # Save with improved layout
 save_df_as_png(summary_df, r"C:\Users\aidan\Downloads\deity_eval_summary.png")
 
+
+ambiguous_1_df = results_df[results_df["ambiguous"] == 1]
+ambiguous_0_df = results_df[results_df["ambiguous"] == 0]
+
+def evaluate_subset(results_subset):
+    TP, FP, FN = 0, 0, 0
+    matched_missing = 0
+    total_truth_deities = 0
+    total_gpt_deities = 0
+
+    for _, row in results_subset.iterrows():
+        matched_deities = ast.literal_eval(row["matched_deities"]) if isinstance(row["matched_deities"], str) else row["matched_deities"]
+        used_final_deities = set()
+
+        for deity, match_info in matched_deities.items():
+            if isinstance(match_info, dict):
+                match = match_info["match"]
+                score = match_info["score"]
+            else:
+                match, score = match_info
+
+            if match == "missing" and str(row["truth_deities"]).strip().lower() == "missing":
+                matched_missing += 1
+            elif score >= 50:
+                TP += 1
+                used_final_deities.add(match)
+            else:
+                if str(row["truth_deities"]).strip().lower() != "missing":
+                    FN += 1
+
+        final_deities = parse_comma_column(row["final_deities"])
+        unmatched_predictions = [d for d in final_deities if d not in used_final_deities]
+        FP += len(unmatched_predictions)
+
+        # Count raw totals
+        truth_deities = parse_comma_column(row.get("truth_deities", ''))
+        total_truth_deities += sum(1 for d in truth_deities if d)
+        total_gpt_deities += sum(1 for d in final_deities if d)
+
+    precision = TP / (TP + FP) if (TP + FP) else 0
+    recall = TP / (TP + FN) if (TP + FN) else 0
+    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) else 0
+    accuracy = TP / (TP + FP + FN) if (TP + FP + FN) else 0
+
+    return {
+        "TP": TP,
+        "FP": FP,
+        "FN": FN,
+        "Matched Missing": matched_missing,
+        "Precision": round(precision, 2),
+        "Recall": round(recall, 2),
+        "F1": round(f1, 2),
+        "Accuracy": round(accuracy, 2),
+        "Truth_Deities": total_truth_deities,
+        "GPT_Deities": total_gpt_deities
+    }
+# Evaluate both groups
+amb_1_metrics = evaluate_subset(ambiguous_1_df)
+amb_1_metrics["Comparison"] = "Ambiguous = 1"
+
+amb_0_metrics = evaluate_subset(ambiguous_0_df)
+amb_0_metrics["Comparison"] = "Ambiguous = 0"
+
+# Combine and display
+amb_summary_df = pd.DataFrame([amb_0_metrics, amb_1_metrics])
+amb_summary_df = amb_summary_df[["Comparison", "TP", "FP", "FN", "Matched Missing", "Precision", "Recall", "F1", "Accuracy", "Truth_Deities", "GPT_Deities"]]
+print(amb_summary_df)
+
+# Optional: save
+save_df_as_png(amb_summary_df, r"C:\Users\aidan\Downloads\deity_eval_ambiguous_summary.png")
