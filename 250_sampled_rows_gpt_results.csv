@@ -1,2 +1,0 @@
-Proper Nouns,Deities,PN -> Deities,Deities -> Correctness
-"['gods', 'Quetzalcoatl', 'Tezcatlipoca', 'Yaoti', 'Tula']","['Quetzalcoatl', 'Tezcatlipoca', 'Tula']","[0, 1, 1, 0, 1]","[1, 1, 1, 0, 0]"

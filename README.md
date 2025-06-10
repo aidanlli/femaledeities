@@ -1,4 +1,4 @@
-# Data Scraping For Female Deities
+# Data Scraping and Identification For Female Deities
 
 ## Overview
 - **Description**: Scraping text and sources from the eHRAF database.
@@ -27,14 +27,14 @@ pip install -r requirements.txt
 ```
 
 
-# Data Scraping From eHRAF
+# 1.0.0 Data Scraping From eHRAF
 
-## Overview
+## 1.1.0 Overview
 
-This project consists six Python scripts that collectively handle data scraping, processing, cleaning, output generation, and high-level metric generation of every culture within the eHRAF World Cultures Database, which is maintained by the Human Relations Area Files (HRAF) at Yale University. While utilizing JavaScript may be faster, we used Python for the ability to display the scraping process in a manner that allows the user to interact with the scraping and visually verify bugs and missed cultures. The total runtime to scrape all information from the database is around 11 hours: cultural_sources_scraping.py, takes roughly three hours to run and paragraph_text_append.py takes approximately eight hours to run, but may vary depending on hardware. The other files have a comparatively trivial runtime. 
+This project consists eight Python scripts that collectively handle data scraping, processing, cleaning, output generation, and high-level metric generation of every culture within the eHRAF World Cultures Database, which is maintained by the Human Relations Area Files (HRAF) at Yale University. While utilizing JavaScript may be faster, we used Python for the ability to display the scraping process in a manner that allows the user to interact with the scraping and visually verify bugs and missed cultures. The total runtime to scrape all information from the database is around 11 hours: cultural_sources_scraping.py, takes roughly three hours to run and paragraph_text_append.py takes approximately eight hours to run, but may vary depending on hardware. The other files have a comparatively trivial runtime. 
 
 The file "qrySummary_eHRAF_WorldCultures_Jan2024" is manually downloaded from the HRAF website: "Cultures in eHRAF World Cultures", found [here](https://hraf.yale.edu/resources/reference/). However, I have also added two additional cultures that have been catalouged between the latest update of that file and 2/5/2025: Tarascans and Chiriguano. If you choose to download from the website directly instead of utilizing the file in the repository, make sure to update this information.
-## Files
+## 1.2.0 Files
 
 ### 1. `cultural_sources_scraping.py` - **Obtaining paragraph source information from eHRAF**
 - **Purpose**: To scrape all relevant paragraphs given culture and subject search strings
@@ -85,7 +85,7 @@ The file "qrySummary_eHRAF_WorldCultures_Jan2024" is manually downloaded from th
 - **Output**: New .csv file with UTF-8 encoding, as well as a print of the output of one cell. There should be a phrase "kikinè" if successful.
 
 
-## **How to Run**: 
+## 1.2.1 **How to Run**: 
 1. Change the "csv_path" in `cultural_sources_scraping` to wherever you downloaded the file qrySummary_eHRAF_WorldCultures_Jan2024. 
 2. Run the following command. If you would like to visually see the process, please comment out "options.add_argument('--headless')" on line 26. in `cultural_sources_scraping.py`.
 ```
@@ -179,7 +179,7 @@ python fix_encoding_errors.py
 ```
 Verify the example output is correctly encoded, with the phrase "thekikinècan" present.
 
-## Final Output
+## 1.2.2 Final Output
 Your final output should consist of the following:
 
 1 ~66mb .csv file with columns "uuid", "Primary_Author", "Title", "Published", "Page", "DocType", "Culture", "Region", "Subregion", "Subsistence", "OCM", "IDs", "Permalink".
@@ -194,3 +194,6 @@ Your final output should consist of the following:
 
 1 histogram: Culture 
 - This histogram displays the distribution of the quantity of source paragraphs for each source.
+
+
+# 2.0.0 Deity Identification

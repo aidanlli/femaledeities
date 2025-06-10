@@ -1,5 +1,5 @@
 import pandas as pd
-
+# In case the encoding of the 250 sampled rows file is incorrect
 # File paths
 processed_file = "C:/Users/aidan/Downloads/processed_output_11s_final.csv"
 sampled_file = "C:/Users/aidan/Downloads/250_sampled_rows_truth.csv"

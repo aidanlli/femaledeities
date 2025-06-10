@@ -1,3 +1,5 @@
+2.0.0 Implemented ChatGPT pipeline and scoring mechanism
+
 1.2.1 Implemented encoding error fix with fix_encoding_errors
 
 1.2.0 Implementation of additional plots, subject type columns, cleaning some columns
