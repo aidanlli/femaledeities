@@ -197,3 +197,8 @@ Your final output should consist of the following:
 
 
 # 2.0.0 Deity Identification
+
+## 2.1.0 Overview
+This section consists of four scripts which produce and evaluate results from the ChatGPT API after being prompted to identify deities within a test set of approximately 0.1% of the entire dataset. All data from this section is derived from the prior data scraping section; no extra data is required at this step. Prior to beginning this section, it is recommended to set up an OpenAI account and obtain a ChatGPT API key. Alternatively, you may be able to use other LLMs, such as Gemini or Llama. Depending on budget constraints, using locally hosted LLMs through Ollama is also an option, but may require sufficiently modern hardware to run efficiently. The total runtime of this section is approximately one hour, with the vast majority of this time dedicated towards the API calls. 
+
+Under the truth_tables folder, we have attached a randomly selected 250 rows of data from the final output of section 1 titled "250_sampled_rows", which we used throughout our testing. However, all code in this section may be ran with a self-generated sample. 
