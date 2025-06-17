@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 # File paths
 truth_path = r"C:\Users\aidan\Downloads\filtered_250_sampled_rows_v4.csv"
-final_path = r"C:\Users\aidan\Downloads\3.final_full_cleaned_v3_no_cat.csv"
+final_path = r"C:\Users\aidan\Downloads\3.final_full_cleaned_v3.csv"
 
 # Load datasets
 truth_df = pd.read_csv(truth_path, encoding="utf-8-sig")
@@ -15,7 +15,7 @@ final_df = pd.read_csv(final_path, encoding="utf-8-sig")
 
 # Normalize function
 def normalize_name(name):
-    if pd.isna(name) or str(name).strip().lower() in {"", "missing"}:
+    if pd.isna(name) or str(name).strip().lower() in {"", "missing", "na"}:
         return None
     return str(name).strip().lower()
 
@@ -121,87 +121,6 @@ def match_deities_with_aliases(deity_aliases, final_deities):
             }
 
     return matches
-# Build a mapping: alias (normalized) → base deity (normalized)
-def build_alias_map(truth_df):
-    alias_map = {}
-
-    for _, row in truth_df.iterrows():
-        deities = parse_comma_column(row.get("Deities", ""))
-        aliases = parse_linked_column(row.get("Other_names", ""))
-
-        for i, deity in enumerate(deities):
-            if deity is None:
-                continue
-
-            # Include the base deity itself
-            alias_map[deity] = deity
-
-            # Handle corresponding alias(es)
-            if i < len(aliases):
-                for alias in parse_comma_column(aliases[i]):
-                    if alias:
-                        alias_map[alias] = deity
-    return alias_map
-def clean_final_deities_into_aliases(final_df, truth_df):
-    for idx, row in final_df.iterrows():
-        # Get corresponding truth row (assumes same index/order)
-        truth_row = truth_df.iloc[idx]
-
-        # Build per-row alias map
-        alias_map = {}
-        alias_keys = []
-
-        base_deities = parse_comma_column(truth_row.get("Deities", ""))
-        other_names = parse_linked_column(truth_row.get("Other_names", ""))
-
-        for i, deity in enumerate(base_deities):
-            if not deity:
-                continue
-
-            alias_map[deity] = deity
-            alias_keys.append(deity)
-
-            if i < len(other_names):
-                for alias in parse_comma_column(other_names[i]):
-                    if alias:
-                        alias_map[alias] = deity
-                        alias_keys.append(alias)
-
-        # Parse predicted deities for this row
-        raw_deities = parse_comma_column(row.get('deities', ''))
-        cleaned_deities = []
-        other_names_per_deity = {}
-
-        for deity in raw_deities:
-            if not deity:
-                continue
-
-            match, score = process.extractOne(deity, alias_keys, scorer=fuzz.token_sort_ratio)
-            canonical = alias_map.get(match)
-
-            if score >= 90 and canonical:
-                if canonical not in cleaned_deities:
-                    cleaned_deities.append(canonical)
-
-                if canonical != deity:
-                    if canonical not in other_names_per_deity:
-                        other_names_per_deity[canonical] = []
-                    other_names_per_deity[canonical].append(deity)
-            else:
-                cleaned_deities.append(deity)
-
-        final_df.at[idx, 'deities'] = ", ".join(cleaned_deities)
-
-        ordered_aliases = []
-        for deity in cleaned_deities:
-            aliases = other_names_per_deity.get(deity, [])
-            ordered_aliases.append(", ".join(aliases))
-        final_df.at[idx, 'other names'] = "; ".join(ordered_aliases)
-
-    return final_df
-
-
-
 
 
 # Evaluation function
@@ -324,21 +243,12 @@ for row in results:
     deity_scores = row.get("score", [])
 
     for gender, match in zip(truth_genders, deity_scores):
-        gender_key = gender.strip().lower() if gender else "NA"
-        if match == 1:
-            gender_match_stats[gender_key]["matched"] += 1
+        # Normalize gender key
+        if gender is None or str(gender).strip().lower() in {"", "missing"}:
+            gender_key = "missing"
         else:
-            gender_match_stats[gender_key]["unmatched"] += 1
+            gender_key = str(gender).strip().lower()
 
-# Gender match breakdown
-gender_match_stats = defaultdict(lambda: {"matched": 0, "unmatched": 0})
-
-for row in results:
-    truth_genders = parse_comma_column(row.get("truth_genders", ''))
-    deity_scores = row.get("score", [])
-
-    for gender, match in zip(truth_genders, deity_scores):
-        gender_key = gender.strip().lower() if gender else "NA"
         if match == 1:
             gender_match_stats[gender_key]["matched"] += 1
         else:
@@ -488,7 +398,7 @@ fn_df.to_csv(r"C:\Users\aidan\Downloads\deity_false_negatives_v3.csv", index=Fal
 
 # Save
 results_df = results_df.merge(truth_df[['uuid', 'ambiguous']], on='uuid', how='left')
-results_df.to_csv(r"C:\Users\aidan\Downloads\deity_matching_results_full_v4_no_cat.csv", index=False, encoding="utf-8-sig")
+results_df.to_csv(r"C:\Users\aidan\Downloads\deity_matching_results_full_v4.csv", index=False, encoding="utf-8-sig")
 
 import pandas as pd
 import ast
@@ -570,8 +480,7 @@ truth_v4 = pd.read_csv(r"C:\Users\aidan\Downloads\filtered_250_sampled_rows_v4.c
 final = pd.read_csv(r"C:\Users\aidan\Downloads\3.final_full_cleaned.csv")
 final_v2 = pd.read_csv(r"C:\Users\aidan\Downloads\3.final_full_cleaned_v2.csv")
 final_v3 = pd.read_csv(r"C:\Users\aidan\Downloads\3.final_full_cleaned_v3.csv")
-final_v3_out_info = pd.read_csv(r"C:\Users\aidan\Downloads\3.final_full_cleaned_v3_out_info.csv")
-final_v3_no_cat = pd.read_csv(r"C:\Users\aidan\Downloads\3.final_full_cleaned_v3_no_cat.csv")
+
 
 
 
@@ -582,9 +491,7 @@ combinations = [
     ("Truth 2 vs Prompt 1", truth_v2, final),
     ("Truth 2 vs Prompt 2", truth_v2, final_v2),
     ("Truth 3 vs Prompt 2", truth_v3, final_v2), 
-    ("Truth 4 vs Prompt 3", truth_v4, final_v3), 
-    ("Truth 4 vs Prompt 3 with outside info column", truth_v4, final_v3_out_info), 
-    ("Truth 4 vs Prompt 3 without categories", truth_v4, final_v3_no_cat), 
+    ("Truth 4 vs Prompt 3", truth_v4, final_v3)
 ]
 
 results_summary = []
@@ -672,3 +579,162 @@ print(amb_summary_df)
 
 # Optional: save
 save_df_as_png(amb_summary_df, r"C:\Users\aidan\Downloads\deity_eval_ambiguous_summary.png")
+
+from collections import defaultdict
+
+
+def parse_comma_column(column):
+    if isinstance(column, str):
+        stripped = column.strip()
+        if stripped.startswith("[") and stripped.endswith("]"):
+            try:
+                evaluated = ast.literal_eval(stripped)
+                if isinstance(evaluated, list):
+                    return [normalize_name(item) for item in evaluated]
+            except (ValueError, SyntaxError):
+                pass
+
+        # Return normalized (including Nones) without filtering them out
+        return [normalize_name(part) for part in column.split(',')]
+    return []
+
+def evaluate_gender_matches_wide(truth_df, final_df):
+    results = []
+    for _, truth_row in truth_df.iterrows():
+        uuid = truth_row['uuid']
+        final_row = final_df[final_df['uuid'] == uuid]
+        if final_row.empty:
+            continue
+        result = evaluate_row(uuid, truth_row, final_row.iloc[0])
+        results.append(result)
+
+    # First pass: compute gender match stats
+    gender_match_stats = defaultdict(lambda: {"matched": 0, "unmatched": 0})
+    observed_genders = set()
+
+    for row in results:
+        truth_genders = parse_comma_column(row.get("truth_genders", ''))
+        deity_scores = row.get("score", [])
+
+        for gender, match in zip(truth_genders, deity_scores):
+            if gender is None or str(gender).strip().lower() in {"", "missing"}:
+                gender_key = "missing"
+            else:
+                gender_key = str(gender).strip().lower()
+            observed_genders.add(gender_key)
+            if match == 1:
+                gender_match_stats[gender_key]["matched"] += 1
+            else:
+                gender_match_stats[gender_key]["unmatched"] += 1
+
+    # Prioritized gender order
+    priority = ["male", "female"]
+    ordered_genders = priority + sorted(g for g in observed_genders if g not in priority)
+
+    # Build dynamic summary row
+    summary_row = {}
+    for gender in ordered_genders:
+        matched = gender_match_stats[gender]["matched"]
+        unmatched = gender_match_stats[gender]["unmatched"]
+        total = matched + unmatched
+        pct = round(100 * matched / total, 2) if total > 0 else 0.0
+
+        summary_row[f"m_{gender}"] = matched
+        summary_row[f"u_{gender}"] = unmatched
+        summary_row[f"t_{gender}"] = total
+        summary_row[f"%_{gender}"] = pct
+
+    return summary_row
+
+
+gender_wide_summary = []
+
+for name, t_df, f_df in combinations:
+    row = evaluate_gender_matches_wide(t_df, f_df)
+    row["Comparison"] = name
+    gender_wide_summary.append(row)
+
+gender_wide_df = pd.DataFrame(gender_wide_summary)
+
+# Optional: move "Comparison" to the first column
+cols = ["Comparison"] + [col for col in gender_wide_df.columns if col != "Comparison"]
+gender_wide_df = gender_wide_df[cols]
+
+print(gender_wide_df)
+save_df_as_png(gender_wide_df, r"C:\Users\aidan\Downloads\gender_eval_summary_wide.png")
+
+
+def evaluate_gender_accuracy_wide(truth_df, final_df):
+    results = []
+    for _, truth_row in truth_df.iterrows():
+        uuid = truth_row['uuid']
+        final_row = final_df[final_df['uuid'] == uuid]
+        if final_row.empty:
+            continue
+        result = evaluate_row(uuid, truth_row, final_row.iloc[0])
+        results.append(result)
+
+    # Gender accuracy stats: for matched deities, is gender prediction correct?
+    gender_match_stats = defaultdict(lambda: {"correct": 0, "incorrect": 0})
+    observed_genders = set()
+
+    for row in results:
+        truth_genders = parse_comma_column(row.get("truth_genders", ''))
+        final_genders = parse_comma_column(row.get("final_genders", ''))
+        deity_scores = row.get("score", [])
+        
+        # Only evaluate gender for successfully matched deities (score = 1)
+        for truth_gender, final_gender, deity_score in zip(truth_genders, final_genders, deity_scores):
+            if deity_score == 1:  # Only for matched deities
+                # Normalize gender values
+                if truth_gender is None or str(truth_gender).strip().lower() in {"", "missing"}:
+                    truth_gender_key = "missing"
+                else:
+                    truth_gender_key = str(truth_gender).strip().lower()
+                
+                if final_gender is None or str(final_gender).strip().lower() in {"", "missing"}:
+                    final_gender_key = "missing"
+                else:
+                    final_gender_key = str(final_gender).strip().lower()
+                
+                observed_genders.add(truth_gender_key)
+                
+                # Check if the predicted gender matches the truth gender
+                if truth_gender_key == final_gender_key:
+                    gender_match_stats[truth_gender_key]["correct"] += 1
+                else:
+                    gender_match_stats[truth_gender_key]["incorrect"] += 1
+
+    # Prioritized gender order
+    priority = ["male", "female"]
+    ordered_genders = priority + sorted(g for g in observed_genders if g not in priority)
+
+    # Build dynamic summary row
+    summary_row = {}
+    for gender in ordered_genders:
+        correct = gender_match_stats[gender]["correct"]
+        incorrect = gender_match_stats[gender]["incorrect"]
+        total = correct + incorrect
+        pct = round(100 * correct / total, 2) if total > 0 else 0.0
+
+        summary_row[f"m_{gender}"] = correct    # matched deities with correct gender
+        summary_row[f"u_{gender}"] = incorrect  # matched deities with incorrect gender
+        summary_row[f"t_{gender}"] = total      # total matched deities of this gender
+        summary_row[f"%_{gender}"] = pct        # percentage with correct gender
+
+    return summary_row
+
+# Loop across comparisons
+gender_wide_summary = []
+
+for name, t_df, f_df in combinations:
+    row = evaluate_gender_accuracy_wide(t_df, f_df)
+    row["Comparison"] = name
+    gender_wide_summary.append(row)
+
+gender_wide_df = pd.DataFrame(gender_wide_summary)
+cols = ["Comparison"] + [col for col in gender_wide_df.columns if col != "Comparison"]
+gender_wide_df = gender_wide_df[cols]
+
+print(gender_wide_df)
+save_df_as_png(gender_wide_df, r"C:\Users\aidan\Downloads\gender_eval_summary_accuracy.png")
