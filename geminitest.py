@@ -1,51 +1,68 @@
-# === SETUP ===
-import openai
-import pandas as pd
-from tqdm import tqdm
-import time
-import os
-import json
-import csv
+# === SETUP === 
+from google import genai
+import pandas as pd 
+from tqdm import tqdm 
+import time 
+import os 
+import json 
+import csv 
 
-# === SETUP ===
-openai.api_key = ""  # Replace with your API key
-input_csv_path = "C:/Users/aidan/Downloads/filtered_250_sampled_rows_v5.csv"
-output_csv_path = "C:/Users/aidan/Downloads/chatgpt_deity_output_792025_v2.csv"
-batch_size = 2
-temperature = 0
+# === SETUP === 
+# API key configured via environment variable
+client = genai.Client()
+input_csv_path = "C:/Users/aidan/Downloads/filtered_250_sampled_rows_v5.csv" 
+output_csv_path = "C:/Users/aidan/Downloads/gemini_api_test.csv" 
+batch_size = 2 
+temperature = 0 
 
-# === LOAD DATA ===
-df = pd.read_csv(input_csv_path, encoding="utf-8-sig")
-if os.path.exists(output_csv_path):
-    result_df = pd.read_csv(output_csv_path, encoding="utf-8-sig")
-    last_processed_index = result_df.index[-1]
-else:
-    result_df = pd.DataFrame()
-    last_processed_index = -1
+# === LOAD DATA === 
+df = pd.read_csv(input_csv_path, encoding="utf-8-sig") 
+if os.path.exists(output_csv_path): 
+    result_df = pd.read_csv(output_csv_path, encoding="utf-8-sig") 
+    last_processed_index = result_df.index[-1] 
+else: 
+    result_df = pd.DataFrame() 
+    last_processed_index = -1 
 
-# === JSON PARSER ===
-def extract_structured_data(text):
-    try:
-        # Remove code block markdown if present
-        if text.startswith("```json"):
-            text = text.strip("```json").strip("` \n")
-        elif text.startswith("```"):
-            text = text.strip("```").strip("` \n")
-        
-        data = json.loads(text)
-        return pd.DataFrame([data])
-    except Exception as e:
-        print(f"[!] JSON parsing failed: {e}")
-        return pd.DataFrame([{"raw_response": text, "error": str(e)}])
-    
-client = openai.OpenAI(api_key=openai.api_key)
-# === SYSTEM PROMPT ===
-system_prompt = """
-Follow instructions precisely as if you were a renowned anthropologist and an economist professor is to determine the following tasks. Organize all the information collected into a JSON object.
+# === JSON PARSER === 
+def extract_structured_data(text): 
+    try: 
+        # Strip code block formatting 
+        if text.startswith("```json"): 
+            text = text[7:].strip("` \n") 
+        elif text.startswith("```"): 
+            text = text[3:].strip("` \n") 
 
-For the given paragraph, with temperature = 0, from each paragraph in column "Text” you are tasked to read and interpret each paragraph in the "Text" column using full language comprehension **(without using any outside knowledge, cultural context, or assumptions not directly evidenced by the paragraph itself).** This means: **no reliance on known mythologies, religious systems, or entities (e.g., “Ogoun is a deity”) unless the paragraph itself says so.**
+        # Try to find the first and last curly brace to extract valid JSON block 
+        start = text.find('{') 
+        end = text.rfind('}') 
+        if start == -1 or end == -1: 
+            raise ValueError("No JSON object found in response.") 
+         
+        json_str = text[start:end+1] 
 
-please follow these steps:
+        # Optional: Replace smart quotes if they sneak in 
+        json_str = json_str.replace(""", "\"").replace(""", "\"") 
+
+        # Optional: Remove trailing commas (invalid in strict JSON) 
+        import re 
+        json_str = re.sub(r',\s*([}\]])', r'\1', json_str) 
+
+        data = json.loads(json_str) 
+        return pd.DataFrame([data]) 
+     
+    except Exception as e: 
+        print(f"[!] JSON parsing failed: {e}") 
+        return pd.DataFrame([{"raw_response": text, "error": str(e)}]) 
+
+# === GEMINI CLIENT SETUP ===
+# Model calls will be made through the client
+
+# === SYSTEM PROMPT === 
+system_prompt = """ 
+ Follow instructions precisely as if you were a renowned anthropologist and an economist professor is to determine the following tasks. Organize all the information collected into a JSON object.
+
+For the given paragraph, with temperature = 0, from each paragraph in column "Text", using GPT to read and interpret each paragraph like a human would (using full language understanding, not pattern-matching), please follow these steps:
 
 1. If the paragraph is not in English, please translate it to English.
 
@@ -53,12 +70,12 @@ please follow these steps:
 
 2.1. In a column called ""deities"" create a list of strings of all elements identified in (2), each of them in quotes (ie. ""deity1"") and separated by a comma (ie. ""deity1"", ""deity2"", ""deity3"") in the order in which they appear in the paragraph.
 
-2.2. Add a column called "other names", where you create another list of strings, where the information of each element is separated by a semi-colon, where you add, if any, other names that an element identified **is referred to in the text**, or write "missing" if there are no other names of that element according to the paragraph. If an element has multiple other names, separate them with a comma (ie. missing; "God of the sky", "He who is all powerful"; missing).
+2.2. Add a column called "other names", where you create another list of strings, where the information of each element is separated by a semi-colon, where you add, if any, other names that an element identified is referred to in the text, or write "missing" if there are no other names of that element according to the paragraph. If an element has multiple other names, separate them with a comma (ie. missing; "God of the sky", "He who is all powerful"; missing).
 
 3. Classify each element from instruction 2 into ""individual"" if there is only one deity by that name, ""multiple"" if the type of deity identified corresponds to multiple beings, forces or objects, and ""missing"" if you cannot tell from the information from the paragraph. 
 3.1. In a column called “cat_type” create a list of strings of all genders identified, in the order of the corresponding deities of 2.1.
 
-4. For each identified element, please estimate if it fits into any of the following categories, using as a general guide the list of suggested keywords, and using your understanding of the paragraph only. Do that for each category below (from 4.1 to 4.20). For each category create a column with a list of strings, where each element of the string represents an element, in the same order as (2.1). Within each column the list of strings should include 1s and 0s. **Only mark categories when the paragraph clearly supports them. If unsure, mark as 0.** Column names should be: cat_creator_universe, cat_creator_human, cat_mother, cat_wife, cat_primal, cat_omni, cat_present, cat_absent, cat_warrior, cat_nature, cat_cosmos, cat_death, cat_ruler, cat_dual, cat_trick, cat_evil, cat_good, cat_demigod, cat_inter, cat_object_force.
+4. For each identified element, please estimate if it fits into any of the following categories, using as a general guide the list of suggested keywords, and using your understanding of the paragraph only. Do that for each category below (from 4.1 to 4.20). For each category create a column with a list of strings, where each element of the string represents an element, in the same order as (2.1). Within each column the list of strings should include 1s and 0s. The number one should be used when the element in that position qualifies as being part of the category of that column. If the deity does not qualify in that category, the element corresponding to it should be the number zero. Column names should be: cat_creator_universe, cat_creator_human, cat_mother, cat_wife, cat_primal, cat_omni, cat_present, cat_absent, cat_warrior, cat_nature, cat_cosmos, cat_death, cat_ruler, cat_dual, cat_trick, cat_evil, cat_good, cat_demigod, cat_inter, cat_object_force.
 
 4.1. Creator of the universe (“creator”, “founder”, “father”, “mother”, “created”, “conceived”) of/the (“cosmos”, “universe”, “world”, “earth”), 
 4.2. Creator of humankind (“creator”, “founder”, “father”, “mother”, “mould”, “created”) of/the (“people”, “race”, “human”, “mankind”, “our mother” or “our father”, “made people”), 
@@ -86,7 +103,8 @@ please follow these steps:
 5.2. If cat_type is “multiple”, classify into: "male" if all members are male, "female" if all members are female, or  "general" if beings in the group may have different genders.
 5.3. If you can't infer the gender or genders from the paragraph, classify it as "missing".  
 
-6. Add two more columns called "certainty_deity" and "certainty_gender" and list, separated by a comma, with the respective certainty levels for each element in the lists of (2.1) and (5 to 5.3), also as a list of strings (ie. "50", "95", "85”). Define each certainty level based on how sure you are of your answer (of the element being an element of interest) and of its gender being correctly identified, using a continuous scale from 0 to 100, where 0 is that you have zero clues and 100 is that you are 100% sure. **Use a lower score if the classification is inferred from suggestive language rather than direct claims.**
+6. Add two more columns called "certainty_deity" and "certainty_gender" and list, separated by a comma, with the respective certainty levels for each element in the lists of (2.1) and (5 to 5.3), also as a list of strings (ie. "50", "95", "85”). Define each certainty level based on how sure you are of your answer (of the element being an element of interest) and of its gender being correctly identified, using a continuous scale from 0 to 100, where 0 is that you have zero clues and 100 is that you are 100% sure. 
+
 
 7. Create a column called inception_myth where you write 1 if the paragraph is part of a myth of creation, or conception of the world, of humankind, or of a specific group of people, and 0 otherwise. "
 
@@ -124,35 +142,44 @@ At the end, return only a valid JSON object containing the following fields (wit
 
 "Respond with only the JSON object. Do not include explanations, prefaces, or markdown formatting. Begin your response with a curly brace and end with a closing curly brace."
 
-"""
+ 
+""" 
 
-# === MAIN LOOP ===
-for i in tqdm(range(last_processed_index + 1, len(df), batch_size), desc="Processing"):
-    batch = df.iloc[i:i + batch_size]
+# === MAIN LOOP === 
+for i in tqdm(range(last_processed_index + 1, len(df), batch_size), desc="Processing"): 
+    batch = df.iloc[i:i + batch_size] 
 
-    for idx, row in batch.iterrows():
-        paragraph = row['Text']
-        user_prompt = f"""Paragraph: {paragraph}"""
+    for idx, row in batch.iterrows(): 
+        paragraph = row['Text'] 
+        # Combine system prompt and user prompt for Gemini
+        full_prompt = f"{system_prompt}\n\nParagraph: {paragraph}"
 
-        try:
-            response = client.chat.completions.create(
-                model="chatgpt-4o-latest",
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                temperature=temperature,
+        try: 
+            response = client.models.generate_content(
+                model='gemini-2.5-pro',
+                contents=full_prompt,
+                config=genai.types.GenerateContentConfig(
+                    temperature=temperature,
+                    max_output_tokens=8192,  # Adjust as needed
+                    top_p=1.0,
+                    top_k=1,
+                )
             )
 
-            reply = response.choices[0].message.content
-            print(f"\n--- Raw GPT Response ---\n{reply}\n------------------------\n")
-            row_data = extract_structured_data(reply)
-            row_data["uuid"] = row["uuid"]
-            result_df = pd.concat([result_df, row_data], ignore_index=True)
+            reply = response.text
+            print(f"\n--- Raw Gemini Response ---\n{reply}\n------------------------\n") 
+            row_data = extract_structured_data(reply) 
+            row_data["uuid"] = row["uuid"] 
+            result_df = pd.concat([result_df, row_data], ignore_index=True) 
 
-        except Exception as e:
-            print(f"Error on row {idx}: {e}")
-            continue
+        except Exception as e: 
+            print(f"Error on row {idx}: {e}") 
+            # Add a small delay on error to avoid hitting rate limits
+            time.sleep(1)
+            continue 
 
-    # Save progress
-    result_df.to_csv(output_csv_path, index=False, encoding="utf-8-sig")
+    # Save progress 
+    result_df.to_csv(output_csv_path, index=False, encoding="utf-8-sig") 
+    
+    # Optional: Add a small delay between batches to respect rate limits
+    time.sleep(0.5)

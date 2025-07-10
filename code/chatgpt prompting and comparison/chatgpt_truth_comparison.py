@@ -4,20 +4,29 @@ from sklearn.metrics import accuracy_score
 import ast
 import re
 import matplotlib.pyplot as plt
+import math
 
 # File paths
-truth_path = r"C:\Users\aidan\Downloads\filtered_250_sampled_rows_v4.csv"
-final_path = r"C:\Users\aidan\Downloads\3.final_full_cleaned_v3.csv"
+truth_path = r"C:\Users\aidan\Downloads\filtered_250_sampled_rows_v5.csv"
+final_path = r"C:\Users\aidan\Downloads\3.chatgpt_deity_output_792025_v2_cleaned.csv"
 
 # Load datasets
 truth_df = pd.read_csv(truth_path, encoding="utf-8-sig")
 final_df = pd.read_csv(final_path, encoding="utf-8-sig")
 
 # Normalize function
-def normalize_name(name):
-    if pd.isna(name) or str(name).strip().lower() in {"", "missing", "na"}:
+def normalize_name(name, keep_missing=False):
+    if pd.isna(name):
         return None
-    return str(name).strip().lower()
+    s = str(name).strip()
+    s_lower = s.lower()
+    
+    if not s_lower:
+        return None
+    if s_lower in {"missing", "na"}:
+        return s_lower if keep_missing else None
+    
+    return s_lower
 
 # Normalize gender column in final_df
 final_df['gender'] = final_df['gender'].str.strip().str.lower().replace({'male & female': 'general'})
@@ -56,17 +65,14 @@ def save_df_as_png(df, filename, dpi=200, fontsize=10, row_height=0.6):
 def parse_comma_column(column):
     if isinstance(column, str):
         stripped = column.strip()
-        # Heuristic: looks like a list
         if stripped.startswith("[") and stripped.endswith("]"):
             try:
                 evaluated = ast.literal_eval(stripped)
                 if isinstance(evaluated, list):
-                    return [normalize_name(item) for item in evaluated if normalize_name(item)]
+                    return [normalize_name(item, keep_missing=True) for item in evaluated]
             except (ValueError, SyntaxError):
-                pass  # Fall through to comma split
-
-        # Fallback: split by comma, strip and normalize each part, and filter out blanks
-        return [normalize_name(part) for part in column.split(',') if normalize_name(part)]
+                pass
+        return [normalize_name(part, keep_missing=True) for part in column.split(',')]
     return []
 
 def parse_linked_column(column):
@@ -223,8 +229,6 @@ def evaluate_row(uuid, truth_row, final_row):
 
 # Run evaluation
 results = []
-#alias_map = build_alias_map(truth_df)
-#final_df = clean_final_deities_into_aliases(final_df, truth_df)
 
 for _, truth_row in truth_df.iterrows():
     uuid = truth_row['uuid']
@@ -348,6 +352,7 @@ print(f"  Matched Missing: {matched_missing}")
 # Collect and save false positives and false negatives
 false_positives = []
 false_negatives = []
+print(results_df.columns.tolist())
 
 for row in results:
     if isinstance(row["matched_deities"], str):
@@ -378,27 +383,50 @@ for row in results:
             })
 
     final_deities = parse_comma_column(row["final_deities"])
+
+    gender_data = row.get("final_genders", [])
+    if isinstance(gender_data, str):
+        gender_str = gender_data
+    elif isinstance(gender_data, float) and math.isnan(gender_data):
+        gender_str = ""
+    elif isinstance(gender_data, list):
+        gender_str = ", ".join(map(str, gender_data))
+    else:
+        gender_str = str(gender_data)
+    gender_data_truth = row.get("truth_genders", [])
+
+    if isinstance(gender_data_truth, str):
+        gender_str_truth = gender_data_truth
+    elif isinstance(gender_data_truth, float) and math.isnan(gender_data_truth):
+        gender_str_truth = ""
+    elif isinstance(gender_data_truth, list):
+        gender_str_truth = ", ".join(map(str, gender_data_truth))
+    else:
+        gender_str_truth = str(gender_data_truth)
+
     for d in final_deities:
         if d not in used_final_deities:
-            # False Positive
             false_positives.append({
                 "uuid": row["uuid"],
                 "extra_deity": d,
                 "truth_deities": row["truth_deities"],
+                "truth_gender": gender_str_truth,
                 "predicted_deities": row["final_deities"],
+                "predicted gender": gender_str,  # now guaranteed to be a list
                 "matched_deities": row["matched_deities"]
             })
+
 
 # Save FP and FN to CSV
 fp_df = pd.DataFrame(false_positives)
 fn_df = pd.DataFrame(false_negatives)
 
-fp_df.to_csv(r"C:\Users\aidan\Downloads\deity_false_positives_v3.csv", index=False, encoding="utf-8-sig")
-fn_df.to_csv(r"C:\Users\aidan\Downloads\deity_false_negatives_v3.csv", index=False, encoding="utf-8-sig")
+fp_df.to_csv(r"C:\Users\aidan\Downloads\deity_false_positives_v4.csv", index=False, encoding="utf-8-sig")
+fn_df.to_csv(r"C:\Users\aidan\Downloads\deity_false_negatives_v4.csv", index=False, encoding="utf-8-sig")
 
 # Save
 results_df = results_df.merge(truth_df[['uuid', 'ambiguous']], on='uuid', how='left')
-results_df.to_csv(r"C:\Users\aidan\Downloads\deity_matching_results_full_v4.csv", index=False, encoding="utf-8-sig")
+results_df.to_csv(r"C:\Users\aidan\Downloads\deity_matching_results_full_v7.csv", index=False, encoding="utf-8-sig")
 
 import pandas as pd
 import ast
@@ -477,9 +505,13 @@ truth = pd.read_csv(r"C:\Users\aidan\Downloads\filtered_250_sampled_rows.csv")
 truth_v2 = pd.read_csv(r"C:\Users\aidan\Downloads\filtered_250_sampled_rows_v2.csv")
 truth_v3 = pd.read_csv(r"C:\Users\aidan\Downloads\filtered_250_sampled_rows_v3.csv")
 truth_v4 = pd.read_csv(r"C:\Users\aidan\Downloads\filtered_250_sampled_rows_v4.csv")
+truth_v5 = pd.read_csv(r"C:\Users\aidan\Downloads\filtered_250_sampled_rows_v5.csv")
 final = pd.read_csv(r"C:\Users\aidan\Downloads\3.final_full_cleaned.csv")
 final_v2 = pd.read_csv(r"C:\Users\aidan\Downloads\3.final_full_cleaned_v2.csv")
 final_v3 = pd.read_csv(r"C:\Users\aidan\Downloads\3.final_full_cleaned_v3.csv")
+final_v4 = pd.read_csv(r"C:\Users\aidan\Downloads\3.final_full_cleaned_v4.csv")
+final_v5 = pd.read_csv(r"C:\Users\aidan\Downloads\3.chatgpt_deity_output_792025_cleaned.csv")
+final_v6 = pd.read_csv(r"C:\Users\aidan\Downloads\3.chatgpt_deity_output_792025_v2_cleaned.csv")
 
 
 
@@ -491,7 +523,10 @@ combinations = [
     ("Truth 2 vs Prompt 1", truth_v2, final),
     ("Truth 2 vs Prompt 2", truth_v2, final_v2),
     ("Truth 3 vs Prompt 2", truth_v3, final_v2), 
-    ("Truth 4 vs Prompt 3", truth_v4, final_v3)
+    ("Truth 4 vs Prompt 3", truth_v4, final_v3), 
+    ("Truth 5 vs Prompt 4", truth_v5, final_v4),
+    ("Truth 5 vs Prompt 3 Updated GPT", truth_v5, final_v5),
+    ("Truth 5 vs Prompt 5 Updated GPT", truth_v5, final_v6),
 ]
 
 results_summary = []
