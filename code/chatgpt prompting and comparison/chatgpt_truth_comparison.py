@@ -8,7 +8,7 @@ import math
 
 # File paths
 truth_path = r"C:\Users\aidan\Downloads\filtered_250_sampled_rows_v5.csv"
-final_path = r"C:\Users\aidan\Downloads\3.chatgpt_deity_output_792025_v2_cleaned.csv"
+final_path = r"C:\Users\aidan\Downloads\chatgpt_deity_output_7212025_cleaned.csv"
 
 # Load datasets
 truth_df = pd.read_csv(truth_path, encoding="utf-8-sig")
@@ -30,6 +30,7 @@ def normalize_name(name, keep_missing=False):
 
 # Normalize gender column in final_df
 final_df['gender'] = final_df['gender'].str.strip().str.lower().replace({'male & female': 'general'})
+#final_df['gender'] = final_df['gender'].str.strip().str.lower().replace({'general': 'missing'})
 
 def save_df_as_png(df, filename, dpi=200, fontsize=10, row_height=0.6):
     nrows = len(df)
@@ -426,7 +427,7 @@ fn_df.to_csv(r"C:\Users\aidan\Downloads\deity_false_negatives_v4.csv", index=Fal
 
 # Save
 results_df = results_df.merge(truth_df[['uuid', 'ambiguous']], on='uuid', how='left')
-results_df.to_csv(r"C:\Users\aidan\Downloads\deity_matching_results_full_v7.csv", index=False, encoding="utf-8-sig")
+results_df.to_csv(r"C:\Users\aidan\Downloads\deity_matching_results_full_v8_test.csv", index=False, encoding="utf-8-sig")
 
 import pandas as pd
 import ast
@@ -506,12 +507,15 @@ truth_v2 = pd.read_csv(r"C:\Users\aidan\Downloads\filtered_250_sampled_rows_v2.c
 truth_v3 = pd.read_csv(r"C:\Users\aidan\Downloads\filtered_250_sampled_rows_v3.csv")
 truth_v4 = pd.read_csv(r"C:\Users\aidan\Downloads\filtered_250_sampled_rows_v4.csv")
 truth_v5 = pd.read_csv(r"C:\Users\aidan\Downloads\filtered_250_sampled_rows_v5.csv")
+truth_v6 = pd.read_csv(r"C:\Users\aidan\Downloads\filtered_250_sampled_rows_v6.csv")
 final = pd.read_csv(r"C:\Users\aidan\Downloads\3.final_full_cleaned.csv")
 final_v2 = pd.read_csv(r"C:\Users\aidan\Downloads\3.final_full_cleaned_v2.csv")
 final_v3 = pd.read_csv(r"C:\Users\aidan\Downloads\3.final_full_cleaned_v3.csv")
 final_v4 = pd.read_csv(r"C:\Users\aidan\Downloads\3.final_full_cleaned_v4.csv")
 final_v5 = pd.read_csv(r"C:\Users\aidan\Downloads\3.chatgpt_deity_output_792025_cleaned.csv")
 final_v6 = pd.read_csv(r"C:\Users\aidan\Downloads\3.chatgpt_deity_output_792025_v2_cleaned.csv")
+final_v7 = pd.read_csv(r"C:\Users\aidan\Downloads\chatgpt_deity_output_7212025_cleaned.csv")
+final_gemini_v1 = pd.read_csv(r"C:\Users\aidan\Downloads\3.gemini_api_test_07212025_cleaned.csv")
 
 
 
@@ -520,13 +524,15 @@ final_v6 = pd.read_csv(r"C:\Users\aidan\Downloads\3.chatgpt_deity_output_792025_
 combinations = [
     ("Truth 1 with Prompt 1", truth, final),
     ("Truth 1 vs Prompt 2", truth, final_v2),
-    ("Truth 2 vs Prompt 1", truth_v2, final),
-    ("Truth 2 vs Prompt 2", truth_v2, final_v2),
+    #("Truth 2 vs Prompt 1", truth_v2, final),
+    #("Truth 2 vs Prompt 2", truth_v2, final_v2),
     ("Truth 3 vs Prompt 2", truth_v3, final_v2), 
     ("Truth 4 vs Prompt 3", truth_v4, final_v3), 
     ("Truth 5 vs Prompt 4", truth_v5, final_v4),
     ("Truth 5 vs Prompt 3 Updated GPT", truth_v5, final_v5),
     ("Truth 5 vs Prompt 5 Updated GPT", truth_v5, final_v6),
+    ("Truth 6 vs Prompt 6 Updated GPT", truth_v6, final_v7),
+    ("Truth 6 vs Gemini v1", truth_v6, final_gemini_v1)
 ]
 
 results_summary = []
@@ -643,7 +649,6 @@ def evaluate_gender_matches_wide(truth_df, final_df):
         result = evaluate_row(uuid, truth_row, final_row.iloc[0])
         results.append(result)
 
-    # First pass: compute gender match stats
     gender_match_stats = defaultdict(lambda: {"matched": 0, "unmatched": 0})
     observed_genders = set()
 
@@ -662,9 +667,12 @@ def evaluate_gender_matches_wide(truth_df, final_df):
             else:
                 gender_match_stats[gender_key]["unmatched"] += 1
 
-    # Prioritized gender order
+    # Define genders to exclude
+    genders_to_exclude = {"general", "mixed"}
+
+    # Prioritized gender order, now with exclusion
     priority = ["male", "female"]
-    ordered_genders = priority + sorted(g for g in observed_genders if g not in priority)
+    ordered_genders = priority + sorted(g for g in observed_genders if g not in priority and g not in genders_to_exclude)
 
     # Build dynamic summary row
     summary_row = {}
@@ -680,7 +688,6 @@ def evaluate_gender_matches_wide(truth_df, final_df):
         summary_row[f"%_{gender}"] = pct
 
     return summary_row
-
 
 gender_wide_summary = []
 

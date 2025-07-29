@@ -150,10 +150,6 @@ def calculate_tp_fp_fn(row) -> tuple:
     # Count false positives (final deities that weren't successfully matched)
     final_deities = parse_comma_column(row["final_deities"])
     
-    # Debug print for your specific case
-    if "husband's spirit" in str(row["final_deities"]).lower():
-        print(f"Debug - Final deities parsed: {final_deities}")
-        print(f"Debug - Used final deities: {used_final_deities}")
     
     unmatched_predictions = [d for d in final_deities if d not in used_final_deities and d != 'missing']
     FP = len(unmatched_predictions)
@@ -203,7 +199,7 @@ def process_csv(input_file: str, output_file: str = None) -> pd.DataFrame:
     """Process the CSV file and add the new columns."""
     
     # Try different encodings to read the CSV
-    encodings = ['utf-8-sig', 'latin-1', 'windows-1252', 'cp1252']
+    encodings = ['utf-8-sig']
     df = None
     
     for encoding in encodings:
@@ -367,8 +363,8 @@ def process_csv(input_file: str, output_file: str = None) -> pd.DataFrame:
 if __name__ == "__main__":
     # Replace with your actual file path - use one of these methods:
     
-    input_filename = r"C:\Users\aidan\Downloads\deity_matching_results_full_v5.csv"
-    output_filename = r"C:\Users\aidan\Downloads\deity_matching_results_full_v5_processed_v4.csv"
+    input_filename = r"C:\Users\aidan\Downloads\deity_matching_results_full_v8.csv"
+    output_filename = r"C:\Users\aidan\Downloads\deity_matching_results_full_v8_processed.csv"
 
     
     try:

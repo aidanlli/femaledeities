@@ -9,8 +9,8 @@ import csv
 
 # === SETUP ===
 openai.api_key = ""  # Replace with your API key
-input_csv_path = "C:/Users/aidan/Downloads/filtered_250_sampled_rows_v5.csv"
-output_csv_path = "C:/Users/aidan/Downloads/chatgpt_deity_output_792025_v2.csv"
+input_csv_path = "C:/Users/aidan/Downloads/filtered_250_sampled_rows_v6.csv"
+output_csv_path = "C:/Users/aidan/Downloads/chatgpt_deity_output_7212025.csv"
 batch_size = 2
 temperature = 0
 
@@ -81,15 +81,16 @@ please follow these steps:
 4.19. Intermediaries (“shaman”, “shamanka”, “priest”, “priestess”, “nun”, “diviner”, “angel”, “saint”, “prophet”, “mystic”, “monk”, “oracle”, “magicians”, “lamas”, “prophets”, beings that are between the supernatural and the human world),
 4.20. Sacred places, objects or forces (“shrine”, “totems”, “church”, “juju”, “magic”, or any other object that has a special power or meaning)
 
-5. For each identified element, please infer its or their gender from the paragraph. Do not simply look at the sentence where they appear, but scan the whole paragraph for clues that reveal their gender. With these, create a column “gender”, in the same order as the list in (2.1), list the genders identified as strings (i.e. male, female, general, missing, etc.).
+5. For each identified element, please infer its or their gender from the paragraph. Do not simply look at the sentence where they appear, but scan the whole paragraph for clues that reveal their gender. With these, create a column “gender”, in the same order as the list in (2.1), list the genders identified as strings (i.e. male, female, missing, etc.).
 5.1. If cat_type is missing or “individual”, classify its gender into: "male", "female", "androgynous" if it is a single being with both male & female genders, or "genderless" if it does not have any gender.
-5.2. If cat_type is “multiple”, classify into: "male" if all members are male, "female" if all members are female, or  "general" if beings in the group may have different genders.
+5.2. If cat_type is “multiple”, classify into: "male" if all members are male, "female" if all members are female.
 5.3. If you can't infer the gender or genders from the paragraph, classify it as "missing".  
 
 6. Add two more columns called "certainty_deity" and "certainty_gender" and list, separated by a comma, with the respective certainty levels for each element in the lists of (2.1) and (5 to 5.3), also as a list of strings (ie. "50", "95", "85”). Define each certainty level based on how sure you are of your answer (of the element being an element of interest) and of its gender being correctly identified, using a continuous scale from 0 to 100, where 0 is that you have zero clues and 100 is that you are 100% sure. **Use a lower score if the classification is inferred from suggestive language rather than direct claims.**
 
 7. Create a column called inception_myth where you write 1 if the paragraph is part of a myth of creation, or conception of the world, of humankind, or of a specific group of people, and 0 otherwise. "
 
+8. Create a column called non_english where you write 1 if the paragraph is not in English, and 0 otherwise.
 At the end, return only a valid JSON object containing the following fields (with lists for each element if applicable):
 ```json
 {{
@@ -119,7 +120,8 @@ At the end, return only a valid JSON object containing the following fields (wit
   "cat_inter": [0, 0],
   "cat_object_force": [0, 0],
   "cat_type": ["individual", "individual"],
-  "inception_myth": [1, 1]
+  "inception_myth": [1, 1],
+  "non_english": [0, 0]
 }}
 
 "Respond with only the JSON object. Do not include explanations, prefaces, or markdown formatting. Begin your response with a curly brace and end with a closing curly brace."
